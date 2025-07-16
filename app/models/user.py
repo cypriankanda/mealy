@@ -76,7 +76,7 @@ class User(db.Model):
             return None, "Email already registered"
         except Exception as e:
             db.session.rollback()
-            return None, f"Registration failed: {str(e)}"
+            return None, f"Registration failed,: {str(e)}"
     
     def update_profile(self, email=None, caterer_name=None):
         """Update user profile information"""
