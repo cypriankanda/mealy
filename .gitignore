@@ -1,0 +1,21 @@
+# Ignore Python virtual environments
+venv/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+
+# VSCode settings
+.vscode/
+
+# Mac system files
+.DS_Store
+
+# Migration folders (optional)
+migrations/
+
+# Node modules (if using React frontend)
+node_modules/
