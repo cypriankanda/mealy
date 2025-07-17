@@ -55,6 +55,51 @@ def create_app(config_name=None):
     app.register_blueprint(customer_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     
+    # ADD THIS: Root route for the home page
+    @app.route('/')
+    def home():
+        return {
+            'message': '🍽️ Welcome to Mealy Catering Platform API',
+            'status': 'success',
+            'version': '1.0.0',
+            'endpoints': {
+                'health': '/api/health',
+                'authentication': '/api/auth/*',
+                'customer_api': '/api/*',
+                'admin_api': '/api/admin/*'
+            },
+            'documentation': 'Visit /api/docs for API documentation'
+        }
+    
+    # ADD THIS: API documentation endpoint
+    @app.route('/api/docs')
+    def api_docs():
+        return {
+            'api_name': 'Mealy Catering Platform API',
+            'version': '1.0.0',
+            'endpoints': {
+                'Authentication': {
+                    'POST /api/auth/register': 'Register new user',
+                    'POST /api/auth/login': 'Login user',
+                    'POST /api/auth/logout': 'Logout user',
+                    'GET /api/auth/profile': 'Get user profile'
+                },
+                'Customer': {
+                    'GET /api/meals': 'Get all meals',
+                    'GET /api/meals/<id>': 'Get specific meal',
+                    'POST /api/orders': 'Create new order',
+                    'GET /api/orders': 'Get user orders'
+                },
+                'Admin': {
+                    'GET /api/admin/users': 'Get all users',
+                    'GET /api/admin/orders': 'Get all orders',
+                    'POST /api/admin/meals': 'Create new meal',
+                    'PUT /api/admin/meals/<id>': 'Update meal',
+                    'DELETE /api/admin/meals/<id>': 'Delete meal'
+                }
+            }
+        }
+    
     # Global error handlers
     @app.errorhandler(400)
     def bad_request(error):
