@@ -35,7 +35,7 @@ const Orders = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     )
   }
@@ -43,7 +43,7 @@ const Orders = () => {
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h1>
+        <h1 className="text-2xl font-bold text-orange-500 mb-6">My Orders</h1>
         
         {orders.length === 0 ? (
           <div className="text-center py-12">

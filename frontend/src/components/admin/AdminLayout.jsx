@@ -53,7 +53,7 @@ const AdminLayout = () => {
               >
                 <div className="flex items-center">
                   <div>
-                    <LogoutIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-500" />
+                    <ArrowRightOnRectangleIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-500" />
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Sign Out</p>
