@@ -21,7 +21,7 @@ const CustomerLayout = () => {
           <div className="flex flex-col w-64 border-r border-gray-200 bg-white">
             <div className="h-0 flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-xl font-bold text-gray-900">Mealy</h1>
+                <h1 className="text-xl font-bold text-orange-500">Mealy</h1>
               </div>
               <nav className="mt-5 flex-1 px-2 space-y-1">
                 {navItems.map((item) => (
@@ -31,14 +31,14 @@ const CustomerLayout = () => {
                     className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                       location.pathname === item.path
                         ? 'bg-primary-100 text-primary-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        : 'text-orange-500 hover:bg-gray-50 hover:text-green-500'
                     }`}
                   >
                     <item.icon
                       className={`mr-3 flex-shrink-0 h-6 w-6 ${
                         location.pathname === item.path
                           ? 'text-primary-500'
-                          : 'text-gray-400 group-hover:text-gray-500'
+                          : 'text-orange-400 group-hover:text-green-500'
                       }`}
                     />
                     {item.name}
@@ -53,10 +53,10 @@ const CustomerLayout = () => {
               >
                 <div className="flex items-center">
                   <div>
-                    <ArrowRightOnRectangleIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-500" />
+                    <ArrowRightOnRectangleIcon className="h-6 w-6 text-red-600 group-hover:text-red-700" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Sign Out</p>
+                    <p className="text-sm font-medium cursor-pointer text-red-600 group-hover:text-red-800">Sign Out</p>
                   </div>
                 </div>
               </button>
@@ -69,12 +69,12 @@ const CustomerLayout = () => {
           {/* Mobile top navigation */}
           <div className="md:hidden bg-white shadow-sm">
             <div className="flex items-center justify-between px-4 py-3">
-              <h1 className="text-lg font-bold text-gray-900">Mealy</h1>
+              <h1 className="text-lg font-bold text-orange-500">Mealy</h1>
               <div className="flex items-center space-x-4">
                 <span className="text-sm font-medium text-gray-700">{user?.email}</span>
                 <button
                   onClick={logout}
-                  className="text-gray-400 hover:text-gray-500"
+                  className="text-red-500 hover:text-red-700"
                 >
                   <ArrowRightOnRectangleIcon className="h-6 w-6" />
                 </button>
@@ -88,8 +88,8 @@ const CustomerLayout = () => {
                     to={item.path}
                     className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 ${
                       location.pathname === item.path
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-orange-500 text-orange-500'
+                        : 'border-transparent text-gray-800 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
                     {item.name}

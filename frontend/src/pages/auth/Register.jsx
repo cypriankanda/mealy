@@ -1,48 +1,61 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { LockClosedIcon, EnvelopeIcon, UserIcon } from '@heroicons/react/24/outline'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import {
+  LockClosedIcon,
+  EnvelopeIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 
 const Register = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('customer')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { register } = useAuth()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("customer");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      await register(email, password, role)
+      await register(email, password, role);
     } catch (err) {
-      setError(err)
+      setError(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-orange-500">
             Join Mealy
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Create your account to get started
           </p>
         </div>
-        
+
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-red-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
@@ -51,11 +64,14 @@ const Register = () => {
             </div>
           </div>
         )}
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="rounded-md space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Email
               </label>
               <div className="relative rounded-md shadow-sm">
@@ -70,14 +86,17 @@ const Register = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border"
+                  className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border"
                   placeholder="Enter your email"
                 />
               </div>
             </div>
-            
+
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Password
               </label>
               <div className="relative rounded-md shadow-sm">
@@ -97,9 +116,12 @@ const Register = () => {
                 />
               </div>
             </div>
-            
+
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Account Type
               </label>
               <div className="mt-1 grid grid-cols-2 gap-3">
@@ -109,12 +131,12 @@ const Register = () => {
                     name="role"
                     type="radio"
                     className="peer hidden"
-                    checked={role === 'customer'}
-                    onChange={() => setRole('customer')}
+                    checked={role === "customer"}
+                    onChange={() => setRole("customer")}
                   />
                   <label
                     htmlFor="customer"
-                    className="block cursor-pointer rounded-lg border border-gray-300 bg-white py-2 px-3 text-center text-sm font-medium hover:bg-gray-50 focus:outline-none peer-checked:border-primary-500 peer-checked:ring-1 peer-checked:ring-primary-500"
+                    className="block cursor-pointer rounded-lg border border-gray-300 bg-white py-2 px-3 text-center text-sm font-medium hover:bg-gray-50 focus:outline-none peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500"
                   >
                     Customer
                   </label>
@@ -125,12 +147,12 @@ const Register = () => {
                     name="role"
                     type="radio"
                     className="peer hidden"
-                    checked={role === 'admin'}
-                    onChange={() => setRole('admin')}
+                    checked={role === "admin"}
+                    onChange={() => setRole("admin")}
                   />
                   <label
                     htmlFor="admin"
-                    className="block cursor-pointer rounded-lg border border-gray-300 bg-white py-2 px-3 text-center text-sm font-medium hover:bg-gray-50 focus:outline-none peer-checked:border-primary-500 peer-checked:ring-1 peer-checked:ring-primary-500"
+                    className="block cursor-pointer rounded-lg border border-gray-300 bg-white py-2 px-3 text-center text-sm font-medium hover:bg-gray-50 focus:outline-none peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500"
                   >
                     Caterer/Admin
                   </label>
@@ -143,24 +165,28 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="group relative cursor-pointer w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500
+ hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? "Creating account..." : "Create Account"}
             </button>
           </div>
         </form>
-        
+
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="font-medium cursor-pointer text-orange-600 hover:text-green-600"
+            >
               Sign in
             </Link>
           </p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;
