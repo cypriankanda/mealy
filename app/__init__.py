@@ -42,10 +42,12 @@ def create_app(config_name=None):
     # Configure CORS for frontend integration
     CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
     
-    # Import models (needed for migrations)
-    from app.models import user, meal, order
+    # Import models (needed for migrations) - FIXED: Import actual classes
+    from app.models.user import User, Caterer
+    # from app.models.meal import Meal  # Uncomment if you have this
+    # from app.models.order import Order  # Uncomment if you have this
     
-    # Register blueprints
+    # Register blueprints - FIXED: Proper indentation
     from app.routes.auth_routes import auth_bp
     from app.routes.customer_routes import customer_bp  
     from app.routes.admin_routes import admin_bp
@@ -55,7 +57,7 @@ def create_app(config_name=None):
     app.register_blueprint(customer_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     
-    # ADD THIS: Root route for the home page
+    # Root route for the home page
     @app.route('/')
     def home():
         return {
@@ -71,7 +73,7 @@ def create_app(config_name=None):
             'documentation': 'Visit /api/docs for API documentation'
         }
     
-    # ADD THIS: API documentation endpoint
+    # API documentation endpoint
     @app.route('/api/docs')
     def api_docs():
         return {
