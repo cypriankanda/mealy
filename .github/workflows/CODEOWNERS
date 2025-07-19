@@ -1,0 +1,24 @@
+# Global admin access
+* @cypriankanda
+
+# Backend files - Only Cyprian can approve
+app/ @cypriankanda
+config.py @cypriankanda
+*.py @cypriankanda
+requirements.txt @cypriankanda
+Dockerfile @cypriankanda
+.github/ @cypriankanda
+run.py @cypriankanda
+Procfile @cypriankanda
+railway.toml @cypriankanda
+migrations/ @cypriankanda
+
+# Frontend files - Cyprian and Khalid can work
+frontend/ @cypriankanda @mabrux-codes
+
+# Documentation - All team members can contribute
+README.md @cypriankanda @mabrux-codes @sherrylydia @VWDREAM
+docs/ @cypriankanda @mabrux-codes @sherrylydia @VWDREAM
+
+# Workflow protection - Only admin
+.github/workflows/ @cypriankanda
