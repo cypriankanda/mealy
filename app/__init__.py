@@ -40,8 +40,13 @@ def create_app(config_name=None):
     bcrypt.init_app(app)
     
     # Configure CORS for frontend integration
-    CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
-    
+    # CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
+    CORS(app, origins=[
+    'http://localhost:5174',  # Vite dev server
+    'http://localhost:3000',  # React dev server
+    'http://localhost:5173',  # Alternative Vite port
+    'http://127.0.0.1:5174',  # Alternative localhost format
+], supports_credentials=True)
     # Import models (needed for migrations) - FIXED: Import actual classes
     from app.models.user import User, Caterer
     # from app.models.meal import Meal  # Uncomment if you have this
