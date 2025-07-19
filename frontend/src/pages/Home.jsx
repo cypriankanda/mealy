@@ -1,87 +1,49 @@
-import { useEffect, useState } from 'react'
-import api from '../services/api'
-import { ShoppingBagIcon, ClockIcon } from '@heroicons/react/24/outline'
-import MenuItem from '../components/customer/MenuItem'
-import OrderCard from '../components/customer/OrderCard'
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
-  const [menu, setMenu] = useState([])
-  const [currentOrder, setCurrentOrder] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [menuRes, orderRes] = await Promise.all([
-          api.get('/menu/today'),
-          api.get('/orders/current')
-        ])
-        setMenu(menuRes.data.meals)
-        setCurrentOrder(orderRes.data)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  const handlePlaceOrder = async (mealId) => {
-    try {
-      const response = await api.post('/orders', { meal_id: mealId })
-      setCurrentOrder(response.data)
-    } catch (error) {
-      console.error('Error placing order:', error)
-    }
-  }
-
-  const handleCancelOrder = async (orderId) => {
-    try {
-      await api.delete(`/orders/${orderId}`)
-      setCurrentOrder(null)
-    } catch (error) {
-      console.error('Error cancelling order:', error)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-      </div>
-    )
-  }
+  const { user } = useAuth();
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-orange-500 mb-6">Today's Menu</h1>
-        
-        {currentOrder && (
-          <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Your Current Order</h2>
-            <OrderCard 
-              order={currentOrder} 
-              onCancel={handleCancelOrder} 
-            />
-          </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {menu.map((meal) => (
-            <MenuItem 
-              key={meal.id} 
-              meal={meal} 
-              onOrder={handlePlaceOrder} 
-              disabled={!!currentOrder}
-            />
-          ))}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
+            Welcome to Mealy
+          </h1>
+          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
+            Order delicious meals from your favorite caterer
+          </p>
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          {user ? (
+            <Link
+              to={user.role === 'admin' ? '/admin' : '/dashboard'}
+              className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+            >
+              Go to Dashboard
+            </Link>
+          ) : (
+            <div className="space-x-4">
+              <Link
+                to="/login"
+                className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+              >
+                Register
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

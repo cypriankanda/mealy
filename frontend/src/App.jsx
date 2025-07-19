@@ -1,61 +1,43 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import PrivateRoute from './components/shared/PrivateRoute'
-import AdminRoute from './components/shared/AdminRoute'
-import CustomerRoute from './components/shared/CustomerRoute'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
+import AdminRoute from './components/AdminRoute';
+import Home from './pages/Home';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminMeals from './pages/AdminMeals';
+import AdminOrders from './pages/AdminOrders';
+import ProfileSettings from './pages/ProfileSettings';
+import ChangePassword from './pages/ChangePassword';
+import OrderHistory from './pages/OrderHistory';
 
-// Layouts
-import AdminLayout from './components/admin/AdminLayout'
-import CustomerLayout from './components/customer/CustomerLayout'
-
-// Pages
-import Login from './pages/auth/Login'
-import Register from './pages/auth/Register'
-import Home from './pages/Home'
-import Menu from './pages/Menu'
-import Orders from './pages/Orders'
-import OrderHistory from './pages/OrderHistory'
-import Profile from './pages/Profile'
-
-// Admin Pages
-import AdminDashboard from './components/admin/Dashboard'
-import AdminOrders from './components/admin/OrdersManagement'
-import AdminMeals from './components/admin/MealsManagement'
-import AdminProfile from './pages/Profile' // Reusing the same profile component
-
-const App = () => {
+function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public routes */}
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Register />} />
+          <Route path="/register" element={<Register />} />
           
-          {/* Customer routes */}
-          <Route path="/customer" element={<CustomerLayout />}>
-            <Route index element={<Home />} />
-            <Route path="menu" element={<Menu />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="orders/history" element={<OrderHistory />} />
-            <Route path="profile" element={<Profile />} />
+          <Route element={<PrivateRoute />}>
+            <Route path="/dashboard" element={<CustomerDashboard />} />
+            <Route path="/profile" element={<ProfileSettings />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/order-history" element={<OrderHistory />} />
+            
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/meals" element={<AdminMeals />} />
+              <Route path="/admin/orders" element={<AdminOrders />} />
+            </Route>
           </Route>
-          
-          {/* Admin routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="meals" element={<AdminMeals />} />
-            <Route path="profile" element={<AdminProfile />} />
-          </Route>
-          
-          {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
-    </Router>
-  )
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
