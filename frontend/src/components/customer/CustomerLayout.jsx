@@ -7,7 +7,7 @@ const CustomerLayout = () => {
   const location = useLocation()
 
   const navItems = [
-    { name: 'Home', path: '/', icon: HomeIcon },
+    { name: 'Home', path: '/customer', icon: HomeIcon },
     { name: 'My Orders', path: '/orders', icon: ShoppingBagIcon },
     { name: 'Order History', path: '/orders/history', icon: ClockIcon },
     { name: 'Profile', path: '/profile', icon: UserIcon },
