@@ -5,8 +5,8 @@ const OrderCard = ({ order, onCancel, showActions = false, showStatus = false })
   const statusIcons = {
     confirmed: <ClockIcon className="h-5 w-5 text-yellow-500" />,
     preparing: <ClockIcon className="h-5 w-5 text-blue-500" />,
-    ready: <CheckCircleIcon className="h-5 w-5 text-green-500" />,
-    delivered: <CheckCircleIcon className="h-5 w-5 text-gray-500" />,
+    ready: <CheckCircleIcon className="h-5 w-5 text-gray-500" />,
+    delivered: <CheckCircleIcon className="h-5 w-5 text-green-500" />,
     cancelled: <XCircleIcon className="h-5 w-5 text-red-500" />,
   }
 
@@ -39,8 +39,8 @@ const OrderCard = ({ order, onCancel, showActions = false, showStatus = false })
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                   order.status === 'confirmed' ? 'bg-yellow-100 text-yellow-800' :
                   order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'ready' ? 'bg-green-100 text-green-800' :
-                  order.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
+                  order.status === 'ready' ? 'bg-gray-100 text-gray-800' :
+                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
                   'bg-red-100 text-red-800'
                 }`}>
                   {statusText[order.status]}

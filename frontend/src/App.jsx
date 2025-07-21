@@ -31,7 +31,7 @@ const App = () => {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           {/* Changed: Root path now shows Home, Register moved to /register */}
-          <Route path="/" element={<CustomerLayout />} />
+          <Route path="/" element={<Navigate to="/customer" replace />} />
           <Route path="/register" element={<Register />} />
           
           {/* Customer routes */}

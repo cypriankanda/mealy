@@ -21,7 +21,7 @@ const AdminLayout = () => {
           <div className="flex flex-col w-64 border-r border-gray-200 bg-white">
             <div className="h-0 flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-xl font-bold text-gray-900">Mealy</h1>
+                <h1 className="text-xl font-bold text-orange-500">Mealy</h1>
               </div>
               <nav className="mt-5 flex-1 px-2 space-y-1">
                 {navItems.map((item) => (
@@ -30,7 +30,7 @@ const AdminLayout = () => {
                     to={item.path}
                     className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                       location.pathname === item.path
-                        ? 'bg-primary-100 text-primary-900'
+                        ? 'bg-primary-100 text-orange-500'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
@@ -69,7 +69,7 @@ const AdminLayout = () => {
           {/* Mobile top navigation */}
           <div className="md:hidden bg-white shadow-sm">
             <div className="flex items-center justify-between px-4 py-3">
-              <h1 className="text-lg font-bold text-gray-900">Mealy</h1>
+              <h1 className="text-lg font-bold text-orange-500">Mealy</h1>
               <div className="flex items-center space-x-4">
                 <span className="text-sm font-medium text-gray-700">{user?.email}</span>
                 <button
@@ -88,7 +88,7 @@ const AdminLayout = () => {
                     to={item.path}
                     className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 ${
                       location.pathname === item.path
-                        ? 'border-primary-500 text-primary-600'
+                        ? 'border-primary-500 text-orange-500'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >

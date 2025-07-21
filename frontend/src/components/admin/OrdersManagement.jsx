@@ -51,7 +51,7 @@ const OrdersManagement = () => {
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders Management</h1>
+        <h1 className="text-2xl font-bold text-orange-500 mb-6">Orders Management</h1>
         <p className="text-gray-600 mb-6">View and manage customer orders</p>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -86,7 +86,7 @@ const OrdersManagement = () => {
               onClick={() => setActiveTab('pending')}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'pending'
-                  ? 'border-primary-500 text-primary-600'
+                  ? 'border-primary-500 text-orange-500'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -96,7 +96,7 @@ const OrdersManagement = () => {
               onClick={() => setActiveTab('all')}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'all'
-                  ? 'border-primary-500 text-primary-600'
+                  ? 'border-primary-500 text-orange-500'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -151,8 +151,8 @@ const OrderCard = ({ order, onStatusUpdate }) => {
   const statusColors = {
     confirmed: 'bg-yellow-100 text-yellow-800',
     preparing: 'bg-blue-100 text-blue-800',
-    ready: 'bg-green-100 text-green-800',
-    delivered: 'bg-gray-100 text-gray-800',
+    ready: 'bg-gray-100 text-gray-800',
+    delivered: 'bg-green-100 text-green-800',
     cancelled: 'bg-red-100 text-red-800',
   }
 
@@ -166,7 +166,7 @@ const OrderCard = ({ order, onStatusUpdate }) => {
       { label: 'Cancel', status: 'cancelled', color: 'red' },
     ],
     ready: [
-      { label: 'Mark Delivered', status: 'delivered', color: 'gray' },
+      { label: 'Mark Delivered', status: 'delivered', color: 'green' },
       { label: 'Cancel', status: 'cancelled', color: 'red' },
     ],
   }

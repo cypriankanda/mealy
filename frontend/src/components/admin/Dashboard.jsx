@@ -39,7 +39,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-orange-500 mb-6">Dashboard</h1>
         <p className="text-gray-600 mb-6">Overview of your catering business</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -66,7 +66,7 @@ const Dashboard = () => {
           />
           <StatCard 
             title="Total Revenue" 
-            value={`KSh ${(6750).toLocaleString()}`} 
+            value={`KSh ${stats?.total_revenue?.toLocaleString()}`} 
             change="This month"
             icon={<CurrencyDollarIcon className="h-6 w-6 text-purple-500" />}
             color="purple"
@@ -76,7 +76,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Orders</h2>
+              <h2 className="text-lg font-medium text-orange-500 mb-4">Recent Orders</h2>
               <div className="space-y-4">
                 {recentOrders.map((order) => (
                   <OrderItem key={order.order_id} order={order} />
@@ -87,7 +87,7 @@ const Dashboard = () => {
           
           <div>
             <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Today's Summary</h2>
+              <h2 className="text-lg font-medium text-orange-500 mb-4">Today's Summary</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Orders Received</span>
@@ -107,7 +107,7 @@ const Dashboard = () => {
             </div>
             
             <div className="mt-6 bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Most Popular Meal</h2>
+              <h2 className="text-lg font-medium text-orange-500 mb-4">Most Popular Meal</h2>
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
                   <ChartBarIcon className="h-6 w-6 text-primary-600" />
