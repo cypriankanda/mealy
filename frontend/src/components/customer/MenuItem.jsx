@@ -2,8 +2,6 @@ import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import PropTypes from 'prop-types'
 
 const MenuItem = ({ meal, onOrder, disabled, showDetails = false }) => {
-  // Removed unused isHovered state
-
   return (
     <div 
       className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
@@ -15,7 +13,7 @@ const MenuItem = ({ meal, onOrder, disabled, showDetails = false }) => {
           
           {showDetails && (
             <div className="mt-2">
-              <p className="text-sm text-gray-500">Price: KSh {meal.price !== undefined ? meal.price : 'N/A'}</p>
+              <p className="text-sm text-gray-500">Price: KSh {meal.price !== undefined ? meal.price.toLocaleString('en-KE') : 'N/A'}</p>
             </div>
           )}
         </div>

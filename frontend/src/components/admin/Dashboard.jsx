@@ -52,7 +52,7 @@ const Dashboard = () => {
           />
           <StatCard 
             title="Today's Revenue" 
-            value={`KSh ${stats?.total_revenue?.toLocaleString()}`} 
+            value={`KSh ${stats?.total_revenue?.toLocaleString('en-KE')}`} 
             change={`+125 from yesterday`}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
             color="green"
@@ -66,7 +66,7 @@ const Dashboard = () => {
           />
           <StatCard 
             title="Total Revenue" 
-            value={`KSh ${stats?.total_revenue?.toLocaleString()}`} 
+            value={`KSh ${stats?.total_revenue?.toLocaleString('en-KE')}`} 
             change="This month"
             icon={<CurrencyDollarIcon className="h-6 w-6 text-purple-500" />}
             color="purple"
@@ -95,12 +95,12 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Revenue Generated</span>
-                  <span className="font-medium">KSh {stats?.total_revenue?.toLocaleString()}</span>
+                  <span className="font-medium">KSh {stats?.total_revenue?.toLocaleString('en-KE')}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Average Order</span>
                   <span className="font-medium">
-                    KSh {stats?.total_orders ? (stats.total_revenue / stats.total_orders).toFixed(2) : 0}
+                    KSh {stats?.total_orders ? (stats.total_revenue / stats.total_orders).toFixed(2).toLocaleString('en-KE') : 0}
                   </span>
                 </div>
               </div>
@@ -167,9 +167,14 @@ const OrderItem = ({ order }) => {
         </div>
       </div>
       <div className="text-right">
-        <p className="font-medium text-gray-900">KSh {order.price}</p>
+        <p className="font-medium text-gray-900">KSh {order.price.toLocaleString('en-KE')}</p>
         <p className="text-sm text-gray-500">
-          {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(order.created_at).toLocaleTimeString('en-KE', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Africa/Nairobi'
+          })}
         </p>
       </div>
     </div>

@@ -115,7 +115,7 @@ const MealsManagement = () => {
           (data) => handleUpdateMeal(editingMeal.id, data) : 
           handleCreateMeal
         }
-        initialData={editingMeal}
+        initialData={editingMeal || { name: '', description: '', price: '' }}
       />
     </div>
   )
@@ -128,7 +128,7 @@ const MealItem = ({ meal, onEdit, onDelete }) => {
         <div>
           <h3 className="font-medium text-gray-900">{meal.name}</h3>
           <p className="text-sm text-gray-500 mt-1">{meal.description}</p>
-          <p className="text-sm font-medium text-gray-900 mt-2">KSh {meal.price}</p>
+          <p className="text-sm font-medium text-gray-900 mt-2">KSh {meal.price.toLocaleString('en-KE')}</p>
         </div>
         <div className="flex space-x-2">
           <button
