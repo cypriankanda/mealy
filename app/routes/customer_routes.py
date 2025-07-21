@@ -300,6 +300,9 @@ def get_current_order():
         'meal_id': current_order.meal_id,
         'meal_name': current_order.meal.name if current_order.meal else None,
         'status': current_order.status
+        'menu_date': current_order.menu_date.isoformat() if current_order.menu_date else None,
+        'price': current_order.price_kes,
+        'created_at': current_order.created_at.isoformat() if current_order.created_at else None
     }), 200
 
 @customer_bp.route('/orders/<int:order_id>', methods=['DELETE'])
