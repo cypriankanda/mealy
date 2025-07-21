@@ -1,4 +1,5 @@
 import { ClockIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import PropTypes from 'prop-types'
 
 const OrderCard = ({ order, onCancel, showActions = false, showStatus = false }) => {
   const statusIcons = {
@@ -29,7 +30,9 @@ const OrderCard = ({ order, onCancel, showActions = false, showStatus = false })
               {order.meal_name || 'Meal'}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Ordered on {new Date(order.created_at).toLocaleDateString()}
+            {order.created_at
+  ? new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+  : 'N/A'}
             </p>
             {showStatus && (
               <div className="mt-2">
@@ -47,9 +50,16 @@ const OrderCard = ({ order, onCancel, showActions = false, showStatus = false })
           </div>
         </div>
         <div className="text-right">
-          <p className="font-medium text-gray-900">KSh {order.price}</p>
+          <p className="font-medium text-gray-900">KSh {order.price !== undefined ? Number(order.price).toLocaleString() : 'N/A'}</p>
           <p className="text-sm text-gray-500">
-            {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {order.created_at
+              ? new Date(order.created_at).toLocaleTimeString('en-KE', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                  timeZone: 'Africa/Nairobi'
+                })
+              : 'N/A'}
           </p>
         </div>
       </div>
@@ -66,6 +76,13 @@ const OrderCard = ({ order, onCancel, showActions = false, showStatus = false })
       )}
     </div>
   )
+}
+
+OrderCard.propTypes = {
+  order: PropTypes.object.isRequired,
+  onCancel: PropTypes.func,
+  showActions: PropTypes.bool,
+  showStatus: PropTypes.bool,
 }
 
 export default OrderCard

@@ -11,7 +11,7 @@ const Orders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await api.get('/orders')
+        const response = await api.get('/orders/history')
         setOrders(response.data.data)
       } catch (error) {
         console.error('Error fetching orders:', error)

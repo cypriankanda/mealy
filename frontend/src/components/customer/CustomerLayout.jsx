@@ -8,9 +8,9 @@ const CustomerLayout = () => {
 
   const navItems = [
     { name: 'Home', path: '/customer', icon: HomeIcon },
-    { name: 'My Orders', path: '/orders', icon: ShoppingBagIcon },
-    { name: 'Order History', path: '/orders/history', icon: ClockIcon },
-    { name: 'Profile', path: '/profile', icon: UserIcon },
+    { name: 'My Orders', path: '/customer/orders', icon: ShoppingBagIcon },
+    { name: 'Order History', path: '/customer/orders/history', icon: ClockIcon },
+    { name: 'Profile', path: '/customer/profile', icon: UserIcon },
   ]
 
   return (

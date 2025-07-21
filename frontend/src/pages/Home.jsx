@@ -30,10 +30,11 @@ const Home = () => {
 
   const handlePlaceOrder = async (mealId) => {
     try {
-      const response = await api.post('/orders', { meal_id: mealId })
-      setCurrentOrder(response.data)
+      await api.post('/orders', {meal_id: mealId});
+      const orderRes = await api.get('/orders/current');
+      setCurrentOrder(orderRes.data);
     } catch (error) {
-      console.error('Error placing order:', error)
+      console.error('Error placing order:', error);
     }
   }
 
@@ -45,6 +46,8 @@ const Home = () => {
       console.error('Error cancelling order:', error)
     }
   }
+
+  const isValidOrder = (order) => order && order.order_id;
 
   if (loading) {
     return (
@@ -59,7 +62,7 @@ const Home = () => {
       <div className="bg-white shadow rounded-lg p-6">
         <h1 className="text-2xl font-bold text-orange-500 mb-6">Today's Menu</h1>
         
-        {currentOrder && (
+        {isValidOrder(currentOrder) && (
           <div className="mb-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Your Current Order</h2>
             <OrderCard 
@@ -75,7 +78,7 @@ const Home = () => {
               key={meal.id} 
               meal={meal} 
               onOrder={handlePlaceOrder} 
-              disabled={!!currentOrder}
+              disabled={isValidOrder(currentOrder)}
             />
           ))}
         </div>
