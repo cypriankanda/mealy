@@ -6,18 +6,30 @@ import { ChartBarIcon, CurrencyDollarIcon, ShoppingBagIcon, ArrowUpIcon } from '
 const Dashboard = () => {
   useAuth()
   const [stats, setStats] = useState(null)
+  const [yesterdayStats, setYesterdayStats] = useState(null)
+  const [topMeal, setTopMeal] = useState(null)
   const [recentOrders, setRecentOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, ordersRes] = await Promise.all([
+        const today = new Date().toISOString().split('T')[0];
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayFormatted = yesterday.toISOString().split('T')[0];
+        
+        const [statsRes, yesterdayRes, ordersRes, topMealRes] = await Promise.all([
           api.get('/admin/dashboard'),
-          api.get('/admin/orders?per_page=5')
+          api.get(`/admin/dashboard?date=${yesterdayFormatted}`),
+          api.get('/admin/orders?per_page=5'),
+          api.get('/admin/meals/top') // You'll need to create this endpoint
         ])
+        
         setStats(statsRes.data)
+        setYesterdayStats(yesterdayRes.data)
         setRecentOrders(ordersRes.data.data)
+        setTopMeal(topMealRes.data)
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
       } finally {
@@ -27,6 +39,13 @@ const Dashboard = () => {
 
     fetchData()
   }, [])
+
+  // Calculate changes from yesterday
+  const calculateChange = (todayValue, yesterdayValue) => {
+    if (!yesterdayStats || yesterdayValue === 0) return '+0';
+    const change = todayValue - yesterdayValue;
+    return `${change >= 0 ? '+' : ''}${change}`;
+  }
 
   if (loading) {
     return (
@@ -46,20 +65,20 @@ const Dashboard = () => {
           <StatCard 
             title="Today's Orders" 
             value={stats?.total_orders} 
-            change={`+2 from yesterday`}
+            change={`${calculateChange(stats?.total_orders, yesterdayStats?.total_orders)} from yesterday`}
             icon={<ShoppingBagIcon className="h-6 w-6 text-primary-500" />}
             color="primary"
           />
           <StatCard 
             title="Today's Revenue" 
             value={`KSh ${stats?.total_revenue?.toLocaleString()}`} 
-            change={`+125 from yesterday`}
+            change={`${calculateChange(stats?.total_revenue, yesterdayStats?.total_revenue)} from yesterday`}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
             color="green"
           />
           <StatCard 
             title="Total Orders" 
-            value={15} 
+            value={stats?.total_orders} 
             change="This month"
             icon={<ShoppingBagIcon className="h-6 w-6 text-blue-500" />}
             color="blue"
@@ -108,17 +127,21 @@ const Dashboard = () => {
             
             <div className="mt-6 bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-medium text-orange-500 mb-4">Most Popular Meal</h2>
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
-                  <ChartBarIcon className="h-6 w-6 text-primary-600" />
+              {topMeal ? (
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
+                    <ChartBarIcon className="h-6 w-6 text-primary-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{topMeal.meal_name}</h3>
+                    <p className="text-sm text-gray-500">Top selling item this week</p>
+                    <p className="text-sm text-gray-500 mt-1">Average order value: KSh {topMeal.average_price?.toFixed(2)}</p>
+                    <p className="text-sm text-gray-500">{topMeal.order_count} orders</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Beef Stew with Rice</h3>
-                  <p className="text-sm text-gray-500">Top selling item this week</p>
-                  <p className="text-sm text-gray-500 mt-1">Average order value: KSh 425</p>
-                  <p className="text-sm text-gray-500">8 orders</p>
-                </div>
-              </div>
+              ) : (
+                <p className="text-gray-500">No data available</p>
+              )}
             </div>
           </div>
         </div>
@@ -126,6 +149,7 @@ const Dashboard = () => {
     </div>
   )
 }
+
 
 const StatCard = ({ title, value, change, icon, color }) => {
   const colorClasses = {

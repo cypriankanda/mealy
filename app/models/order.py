@@ -228,5 +228,33 @@ class Order(db.Model):
             'status_counts': status_counts
         }
     
+    @classmethod
+    def get_top_meal(cls, caterer_id, days=7):
+        """Get the top selling meal for a caterer in the last N days"""
+        start_date = date.today() - timedelta(days=days)
+    
+        result = cls.query.join(cls.meal)\
+             .filter_by(caterer_id=caterer_id)\
+             .filter(cls.menu_date >= start_date)\
+             .filter(cls.status != 'cancelled')\
+             .with_entities(
+                 cls.meal_id,
+                 Meal.name.label('meal_name'),
+                 func.count(cls.id).label('order_count'),
+                 func.avg(cls.price).label('average_price')
+        )\
+        .group_by(cls.meal_id, Meal.name)\
+        .order_by(func.count(cls.id).desc())\
+        .first()
+    
+        if result:
+            return {
+            'meal_id': result.meal_id,
+            'meal_name': result.meal_name,
+            'order_count': result.order_count,
+            'average_price': result.average_price / 100  # Convert from cents
+        }
+        return None
+
     def __repr__(self):
         return f'<Order {self.id} - {self.status} - KES {self.price_kes}>'

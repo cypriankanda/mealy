@@ -31,6 +31,16 @@ def get_dashboard():
     stats = Order.get_dashboard_stats(user.caterer_id, today)
     
     return jsonify(stats), 200
+def dashboard_stats():
+    date_filter = request.args.get('date')
+    if date_filter:
+        try:
+            date_filter = datetime.strptime(date_filter, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'error': 'Invalid date format'}), 400
+    
+    stats = Order.get_dashboard_stats(current_user.id, date_filter)
+    return jsonify(stats)
 
 @admin_bp.route('/meals', methods=['GET'])
 @admin_required
@@ -170,3 +180,10 @@ def update_order_status(order_id):
         return jsonify({'error': 'Status update failed', 'message': error}), 400
     
     return jsonify({'message': 'Order status updated successfully'}), 200
+
+@admin_bp.route('/meals/top')
+@admin_required
+def get_top_meal():
+    caterer_id = current_user.id
+    top_meal = Order.get_top_meal(caterer_id)
+    return jsonify(top_meal if top_meal else {})
