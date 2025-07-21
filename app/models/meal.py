@@ -34,7 +34,7 @@ class Meal(db.Model):
     def __init__(self, name, description, price, caterer_id):
         self.name = name.strip()
         self.description = description.strip()
-        self.price = int(price) * 100  # Save KES directly
+        self.price = int(price)  # Save KES directly
         self.caterer_id = caterer_id
 
     @property
@@ -67,7 +67,7 @@ class Meal(db.Model):
             if price is not None:
                 if price <= 0:
                     return False, "Price must be greater than 0"
-                self.price = int(price) * 100  # Ensure price is stored in KES
+                self.price = int(price)  # Ensure price is stored in KES
 
             self.updated_at = datetime.utcnow()
             db.session.commit()
