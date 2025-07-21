@@ -70,12 +70,12 @@ const OrdersManagement = () => {
             value={`KSh ${orders
               .filter(o => new Date(o.created_at).toDateString() === new Date().toDateString())
               .reduce((sum, o) => sum + o.price, 0)
-              .toLocaleString()}`} 
+              .toLocaleString('en-KE')}`} 
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
           />
           <StatCard 
             title="Total Revenue" 
-            value={`KSh ${orders.reduce((sum, o) => sum + o.price, 0).toLocaleString()}`} 
+            value={`KSh ${orders.reduce((sum, o) => sum + o.price, 0).toLocaleString('en-KE')}`} 
             icon={<CurrencyDollarIcon className="h-6 w-6 text-blue-500" />}
           />
         </div>
@@ -195,9 +195,14 @@ const OrderCard = ({ order, onStatusUpdate }) => {
           </div>
         </div>
         <div className="text-right">
-          <p className="font-medium text-gray-900">KSh {order.price}</p>
+          <p className="font-medium text-gray-900">KSh {order.price.toLocaleString('en-KE')}</p>
           <p className="text-sm text-gray-500">
-            {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(order.created_at).toLocaleTimeString('en-KE', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: true,
+              timeZone: 'Africa/Nairobi'
+            })}
           </p>
         </div>
       </div>
