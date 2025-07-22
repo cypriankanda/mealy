@@ -260,7 +260,7 @@ const OrderCard = ({ order, onStatusUpdate }) => {
         </div>
         <div className="text-right">
           <p className="font-medium text-gray-900">
-            KSh {order.price.toLocaleString("en-KE")}
+            KSh {Number(order.price).toLocaleString("en-KE")}
           </p>
           <p className="text-sm text-gray-500">
             {new Date(order.created_at).toLocaleTimeString("en-KE", {
