@@ -10,12 +10,7 @@ const MenuItem = ({ meal, onOrder, disabled, showDetails = false }) => {
         <div className="flex-grow">
           <h3 className="font-medium text-gray-900">{meal.name || 'Meal'}</h3>
           <p className="text-sm text-gray-500 mt-1">{meal.description || 'No description'}</p>
-          
-          {showDetails && (
-            <div className="mt-2">
-              <p className="text-sm text-gray-500">Price: KSh {meal.price !== undefined ? meal.price.toLocaleString('en-KE') : 'N/A'}</p>
-            </div>
-          )}
+          <p className="text-base font-semibold text-orange-600 mt-1">Price: KSh {meal.price !== undefined ? meal.price.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</p>
         </div>
         
         {onOrder && (
