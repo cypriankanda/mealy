@@ -43,13 +43,13 @@ class Order(db.Model):
         self.user_id = user_id
         self.meal_id = meal_id
         self.menu_date = menu_date
-        self.price = int(price * 100) if isinstance(price, float) else price  # Convert to cents
+        self.price = price
         self.special_instructions = special_instructions
     
     @property
     def price_kes(self):
-        """Get price in KES (from cents)"""
-        return self.price / 100
+        """Get price in KES """
+        return self.price
     
     @classmethod
     def create_order(cls, user_id, meal_id, menu_date, price, special_instructions=None):
