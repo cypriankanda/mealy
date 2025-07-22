@@ -252,7 +252,7 @@ def place_order():
         user_id=user.id,
         meal_id=meal.id,
         menu_date=today,
-        price=meal.price_kes,
+        price=float(meal.price_kes),
         special_instructions=data.get('special_instructions')
     )
     
