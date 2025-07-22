@@ -43,13 +43,13 @@ class Order(db.Model):
         self.user_id = user_id
         self.meal_id = meal_id
         self.menu_date = menu_date
-        self.price = price
+        self.price =int(float(price) * 100)
         self.special_instructions = special_instructions
     
     @property
     def price_kes(self):
         """Get price in KES """
-        return self.price
+        return self.price / 100
     
     @classmethod
     def create_order(cls, user_id, meal_id, menu_date, price, special_instructions=None):
@@ -224,7 +224,7 @@ class Order(db.Model):
         return {
             'total_orders': total_orders,
             'confirmed_orders': confirmed_orders,
-            'total_revenue': total_revenue / 100,  # Convert to Kenya shillings
+            'total_revenue': total_revenue,  # Convert to Kenya shillings
             'status_counts': status_counts
         }
     
