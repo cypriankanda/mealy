@@ -34,7 +34,7 @@ class Meal(db.Model):
     def __init__(self, name, description, price, caterer_id):
         self.name = name.strip()
         self.description = description.strip()
-        self.price = int(price)  # Save KES directly
+        self.price = price  # Save KES directly
         self.caterer_id = caterer_id
 
     @property
