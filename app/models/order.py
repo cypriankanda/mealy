@@ -202,31 +202,45 @@ class Order(db.Model):
         """Get dashboard statistics for admin"""
         # Base query filtered by caterer
         base_query = cls.query.join(cls.meal).filter_by(caterer_id=caterer_id)
-        
+    
         if date_filter:
-            base_query = base_query.filter(cls.menu_date == date_filter)
+           base_query = base_query.filter(cls.menu_date == date_filter)
         else:
             # Default to today
             base_query = base_query.filter(cls.menu_date == date.today())
-        
-        # Get counts and revenue
-        total_orders = base_query.count()
-        confirmed_orders = base_query.filter(cls.status != 'cancelled').count()
-        total_revenue = base_query.filter(cls.status != 'cancelled')\
-            .with_entities(func.sum(cls.price)).scalar() or 0
-        
+    
+        # Get all orders for calculations
+        orders = base_query.filter(cls.status != 'cancelled').all()
+    
+        # Calculate metrics
+        total_orders = len(orders)
+        total_revenue = sum(order.price for order in orders)
+    
+        # Calculate most popular meal
+        meal_counts = {}
+        for order in orders:
+            meal_name = order.meal.name if order.meal else 'Unknown'
+            meal_counts[meal_name] = meal_counts.get(meal_name, 0) + 1
+    
+        most_popular = max(meal_counts.items(), key=lambda x: x[1], default=('None', 0))
+    
+        # Calculate average order value
+        avg_order = total_revenue / total_orders if total_orders > 0 else 0
+    
         # Get status breakdown
         status_counts = {}
         for status in ['confirmed', 'preparing', 'ready', 'delivered', 'cancelled']:
             count = base_query.filter(cls.status == status).count()
             status_counts[status] = count
-        
+    
         return {
             'total_orders': total_orders,
-            'confirmed_orders': confirmed_orders,
-            'total_revenue': total_revenue,  # Convert to Kenya shillings
+            'total_revenue': total_revenue,
+            'most_popular_meal': {
+                'name': most_popular[0],
+                'count': most_popular[1],
+                'avg_price': sum(o.price for o in orders if o.meal and o.meal.name == most_popular[0]) / most_popular[1] if most_popular[1] > 0 else 0
+            },
+            'avg_order': avg_order,
             'status_counts': status_counts
-        }
-    
-    def __repr__(self):
-        return f'<Order {self.id} - {self.status} - KES {self.price_kes}>'
+    }

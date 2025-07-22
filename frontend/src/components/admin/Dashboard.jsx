@@ -13,6 +13,15 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,6 +40,9 @@ const Dashboard = () => {
     };
 
     fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -44,35 +56,51 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-orange-500 mb-6">Dashboard</h1>
-        <p className="text-gray-600 mb-6">Overview of your catering business</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-orange-500 mb-2">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Overview of your catering business
+            </p>
+          </div>
+          <div className="text-sm text-gray-500">
+            {currentTime.toLocaleTimeString("en-KE", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+              timeZone: "Africa/Nairobi",
+            })}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Today's Orders"
-            value={stats?.total_orders}
-            change={`+2 from yesterday`}
+            value={stats?.total_orders || 0}
+            change="Today"
             icon={<ShoppingBagIcon className="h-6 w-6 text-primary-500" />}
             color="primary"
           />
           <StatCard
             title="Today's Revenue"
-            value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE")}`}
-            change={`+125 from yesterday`}
+            value={`KSh ${(stats?.total_revenue || 0).toLocaleString("en-KE")}`}
+            change="Today"
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
             color="green"
           />
           <StatCard
             title="Total Orders"
-            value={15}
-            change="This month"
+            value={stats?.total_orders || 0}
+            change="All time"
             icon={<ShoppingBagIcon className="h-6 w-6 text-blue-500" />}
             color="blue"
           />
           <StatCard
             title="Total Revenue"
-            value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE")}`}
-            change="This month"
+            value={`KSh ${(stats?.total_revenue || 0).toLocaleString("en-KE")}`}
+            change="All time"
             icon={<CurrencyDollarIcon className="h-6 w-6 text-purple-500" />}
             color="purple"
           />
@@ -100,23 +128,21 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Orders Received</span>
-                  <span className="font-medium">{stats?.total_orders}</span>
+                  <span className="font-medium">
+                    {stats?.total_orders || 0}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Revenue Generated</span>
                   <span className="font-medium">
-                    KSh {stats?.total_revenue?.toLocaleString("en-KE")}
+                    KSh {(stats?.total_revenue || 0).toLocaleString("en-KE")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Average Order</span>
                   <span className="font-medium">
                     KSh{" "}
-                    {stats?.total_orders
-                      ? (stats.total_revenue / stats.total_orders)
-                          .toFixed(2)
-                          .toLocaleString("en-KE")
-                      : 0}
+                    {stats?.avg_order?.toFixed(2).toLocaleString("en-KE") || 0}
                   </span>
                 </div>
               </div>
@@ -132,15 +158,20 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">
-                    Beef Stew with Rice
+                    {stats?.most_popular_meal?.name || "No orders yet"}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Top selling item this week
+                    Top selling item today
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    Average order value: KSh 425
+                    Average order value: KSh{" "}
+                    {stats?.most_popular_meal?.avg_price
+                      ?.toFixed(2)
+                      .toLocaleString("en-KE") || 0}
                   </p>
-                  <p className="text-sm text-gray-500">8 orders</p>
+                  <p className="text-sm text-gray-500">
+                    {stats?.most_popular_meal?.count || 0} orders
+                  </p>
                 </div>
               </div>
             </div>
