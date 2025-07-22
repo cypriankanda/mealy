@@ -88,18 +88,18 @@ def update_meal(meal_id):
 @admin_bp.route('/meals/<int:meal_id>', methods=['DELETE'])
 @admin_required
 def delete_meal(meal_id):
-    """Delete meal"""
+    """Mark meal as unavailable instead of deleting"""
     user = get_current_user()
     
     meal = Meal.query.filter_by(id=meal_id, caterer_id=user.caterer_id).first()
     if not meal:
         return jsonify({'error': 'Meal not found'}), 404
     
-    success, error = meal.hard_delete()
-    if not success:
-        return jsonify({'error': 'Delete failed', 'message': error}), 400
+    meal.is_active = False
+    meal.updated_at = datetime.utcnow()
+    db.session.commit()
     
-    return jsonify({'message': 'Meal deleted successfully'}), 200
+    return jsonify({'message': 'Meal marked as unavailable'}), 200
 
 @admin_bp.route('/orders', methods=['GET'])
 @admin_required

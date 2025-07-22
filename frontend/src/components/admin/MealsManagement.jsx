@@ -55,7 +55,8 @@ const MealsManagement = () => {
       await api.delete(`/admin/meals/${mealId}`)
       setMeals(meals.filter(meal => meal.id !== mealId))
     } catch (error) {
-      console.error('Error deleting meal:', error)
+      console.error('Error marking meal as unavailable:', error)
+      // Optionally show a toast or alert here
     }
   }
 
@@ -123,12 +124,15 @@ const MealsManagement = () => {
 
 const MealItem = ({ meal, onEdit, onDelete }) => {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+    <div className={`bg-white p-4 rounded-lg shadow-sm border border-gray-100 ${meal.is_active === false ? 'opacity-50' : ''}`}>
       <div className="flex justify-between items-start">
         <div>
           <h3 className="font-medium text-gray-900">{meal.name}</h3>
           <p className="text-sm text-gray-500 mt-1">{meal.description}</p>
           <p className="text-sm font-medium text-gray-900 mt-2">KSh {meal.price.toLocaleString('en-KE')}</p>
+          {meal.is_active === false && (
+            <span className="text-xs text-red-500 font-semibold">Unavailable</span>
+          )}
         </div>
         <div className="flex space-x-2">
           <button
