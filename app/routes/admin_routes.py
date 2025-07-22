@@ -27,9 +27,10 @@ def get_dashboard():
     user = get_current_user()
     today = date.today()
     
-    # Get dashboard statisticss
+    # Get dashboard statistics
     stats = Order.get_dashboard_stats(user.caterer_id, today)
     
+    # Ensure revenue is in KES (no division needed now)
     return jsonify(stats), 200
 
 @admin_bp.route('/meals', methods=['GET'])

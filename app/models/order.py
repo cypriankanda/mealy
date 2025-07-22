@@ -49,7 +49,7 @@ class Order(db.Model):
     @property
     def price_kes(self):
         """Get price in KES """
-        return self.price
+        return self.price / 100
     
     @classmethod
     def create_order(cls, user_id, meal_id, menu_date, price, special_instructions=None):
