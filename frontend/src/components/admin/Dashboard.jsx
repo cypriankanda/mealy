@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [monthlyOrders, setMonthlyOrders] = useState(0);
   const [popularMeal, setPopularMeal] = useState(null);
+  const [cancelledOrdersCount, setCancelledOrdersCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +31,6 @@ const Dashboard = () => {
         const allOrders = allOrdersResponse.data.data;
 
         // Filter orders for today and yesterday
-        const formatDate = (date) => date.toISOString().split('T')[0];
         const todayOrders = allOrders.filter(order => 
           new Date(order.created_at).toDateString() === today.toDateString()
         );
@@ -43,7 +43,10 @@ const Dashboard = () => {
           total_orders: todayOrders.length,
           total_revenue: todayOrders
             .filter(order => order.status !== 'cancelled')
-            .reduce((sum, order) => sum + order.price, 0)
+            .reduce((sum, order) => sum + order.price, 0),
+          cancelled_orders: todayOrders
+            .filter(order => order.status === 'cancelled')
+            .length
         };
 
         // Calculate yesterday's stats
@@ -51,7 +54,10 @@ const Dashboard = () => {
           total_orders: yesterdayOrders.length,
           total_revenue: yesterdayOrders
             .filter(order => order.status !== 'cancelled')
-            .reduce((sum, order) => sum + order.price, 0)
+            .reduce((sum, order) => sum + order.price, 0),
+          cancelled_orders: yesterdayOrders
+            .filter(order => order.status === 'cancelled')
+            .length
         };
 
         // Get recent orders
@@ -60,6 +66,7 @@ const Dashboard = () => {
         setStats(todayStats);
         setYesterdayStats(yesterdayStats);
         setRecentOrders(recentOrdersResponse.data.data);
+        setCancelledOrdersCount(todayStats.cancelled_orders);
 
         // Calculate monthly orders
         const currentMonth = today.getMonth();
@@ -143,21 +150,10 @@ const Dashboard = () => {
     true
   );
 
-  // Calculate average order value excluding canceled orders
-  const calculateAverageOrderValue = () => {
-    if (!stats) return 0;
-
-    const deliveredOrders = recentOrders.filter(
-      (order) => order.status === "delivered"
-    );
-    const totalRevenue = deliveredOrders.reduce(
-      (sum, order) => sum + order.price,
-      0
-    );
-    const orderCount = deliveredOrders.length;
-
-    return orderCount > 0 ? totalRevenue / orderCount : 0;
-  };
+  const cancelledComparison = getComparisonText(
+    cancelledOrdersCount || 0,
+    yesterdayStats?.cancelled_orders || 0
+  );
 
   if (loading) {
     return (
@@ -252,13 +248,18 @@ const Dashboard = () => {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Average Order Value</span>
-                  <span className="font-medium">
-                    KSh{" "}
-                    {calculateAverageOrderValue()
-                      .toFixed(2)
-                      .toLocaleString("en-KE")}
-                  </span>
+                  <span className="text-gray-600">Cancelled Orders</span>
+                  <div className="flex items-center">
+                    <span className="font-medium mr-2">{cancelledOrdersCount}</span>
+                    <div className="flex items-center text-sm text-gray-500">
+                      {/* {cancelledComparison.isIncrease ? (
+                        <ArrowUpIcon className="h-4 w-4 text-red-500 mr-1" />
+                      ) : (
+                        <ArrowDownIcon className="h-4 w-4 text-green-500 mr-1" />
+                      )} */}
+                      <span>{cancelledComparison.text}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

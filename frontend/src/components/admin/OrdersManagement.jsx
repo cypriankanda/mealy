@@ -17,20 +17,20 @@ const OrdersManagement = () => {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      try {
-        let url = "/admin/orders";
-        if (activeTab === "pending") {
-          url += "?status=confirmed,preparing,ready";
-        }
+  try {
+    let params = {};
+    if (activeTab === "pending") {
+      params.status = ["confirmed", "preparing", "ready"];
+    }
 
-        const response = await api.get(url);
-        setOrders(response.data.data);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const response = await api.get("/admin/orders", { params });
+    setOrders(response.data.data);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
     fetchOrders();
   }, [activeTab]);
