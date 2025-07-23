@@ -198,34 +198,68 @@ class Order(db.Model):
             .paginate(page=page, per_page=per_page, error_out=False)
     
     @classmethod
-    def get_dashboard_stats(cls, caterer_id, date_filter=None):
-        """Get dashboard statistics for admin"""
-        # Base query filtered by caterer
-        base_query = cls.query.join(cls.meal).filter_by(caterer_id=caterer_id)
+    def get_dashboard_stats(cls, caterer_id):
+        """Get comprehensive dashboard statistics"""
+        today = date.today()
+        yesterday = today - timedelta(days=1)
+        first_day_of_month = today.replace(day=1)
         
-        if date_filter:
-            base_query = base_query.filter(cls.menu_date == date_filter)
-        else:
-            # Default to today
-            base_query = base_query.filter(cls.menu_date == date.today())
+        # Start of week (Monday)
+        start_of_week = today - timedelta(days=today.weekday())
         
-        # Get counts and revenue
-        total_orders = base_query.count()
-        confirmed_orders = base_query.filter(cls.status != 'cancelled').count()
-        total_revenue = base_query.filter(cls.status != 'cancelled')\
-            .with_entities(func.sum(cls.price)).scalar() or 0
+        # Today's stats
+        today_stats = cls.query.join(cls.meal).filter(
+            Meal.caterer_id == caterer_id,
+            cls.menu_date == today
+        ).with_entities(
+            func.count(cls.id).label('total_orders'),
+            func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue'),
+            func.count().filter(cls.status == 'cancelled').label('cancelled_orders')
+        ).first()
         
-        # Get status breakdown
-        status_counts = {}
-        for status in ['confirmed', 'preparing', 'ready', 'delivered', 'cancelled']:
-            count = base_query.filter(cls.status == status).count()
-            status_counts[status] = count
+        # Yesterday's stats
+        yesterday_stats = cls.query.join(cls.meal).filter(
+            Meal.caterer_id == caterer_id,
+            cls.menu_date == yesterday
+        ).with_entities(
+            func.count(cls.id).label('total_orders'),
+            func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue')
+        ).first()
+        
+        # Month stats
+        month_stats = cls.query.join(cls.meal).filter(
+            Meal.caterer_id == caterer_id,
+            cls.menu_date >= first_day_of_month,
+            cls.menu_date <= today
+        ).with_entities(
+            func.count(cls.id).label('total_orders'),
+            func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue')
+        ).first()
+        
+        # Most popular meal this week
+        popular_meal = db.session.query(
+            Meal.name,
+            func.count(cls.id).label('order_count'),
+            func.avg(cls.price).label('avg_price')
+        ).join(cls.meal).filter(
+            Meal.caterer_id == caterer_id,
+            cls.menu_date >= start_of_week,
+            cls.status != 'cancelled'
+        ).group_by(Meal.id).order_by(func.count(cls.id).desc()).first()
         
         return {
-            'total_orders': total_orders,
-            'confirmed_orders': confirmed_orders,
-            'total_revenue': total_revenue,  # Convert to Kenya shillings
-            'status_counts': status_counts
+            'today_orders': today_stats[0] or 0,
+            'today_revenue': today_stats[1] or 0,
+            'today_cancelled': today_stats[2] or 0,
+            'yesterday_orders': yesterday_stats[0] or 0,
+            'yesterday_revenue': yesterday_stats[1] or 0,
+            'month_orders': month_stats[0] or 0,
+            'month_revenue': month_stats[1] or 0,
+            'popular_meal': {
+                'name': popular_meal[0],
+                'order_count': popular_meal[1],
+                'avg_price': round(popular_meal[2] or 0)
+            } if popular_meal else None
         }
     
     def __repr__(self):

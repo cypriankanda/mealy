@@ -33,6 +33,16 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  // Calculate changes from yesterday
+  const calculateChange = (today, yesterday) => {
+    if (yesterday === 0) return "+100%"; // Avoid division by zero
+    const change = ((today - yesterday) / yesterday) * 100;
+    return `${change >= 0 ? "+" : ""}${Math.round(change)}% from yesterday`;
+  };
+
+  // Calculate month orders (replace with actual implementation)
+  const monthOrders = stats?.month_orders || 15;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -50,28 +60,34 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Today's Orders"
-            value={stats?.total_orders}
-            change={`+2 from yesterday`}
+            value={stats?.today_orders || 0}
+            change={calculateChange(
+              stats?.today_orders || 0,
+              stats?.yesterday_orders || 0
+            )}
             icon={<ShoppingBagIcon className="h-6 w-6 text-primary-500" />}
             color="primary"
           />
           <StatCard
             title="Today's Revenue"
-            value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE")}`}
-            change={`+125 from yesterday`}
+            value={`KSh ${(stats?.today_revenue || 0).toLocaleString("en-KE")}`}
+            change={calculateChange(
+              stats?.today_revenue || 0,
+              stats?.yesterday_revenue || 0
+            )}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
             color="green"
           />
           <StatCard
             title="Total Orders"
-            value={15}
+            value={monthOrders}
             change="This month"
             icon={<ShoppingBagIcon className="h-6 w-6 text-blue-500" />}
             color="blue"
           />
           <StatCard
             title="Total Revenue"
-            value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE")}`}
+            value={`KSh ${(stats?.month_revenue || 0).toLocaleString("en-KE")}`}
             change="This month"
             icon={<CurrencyDollarIcon className="h-6 w-6 text-purple-500" />}
             color="purple"
@@ -100,23 +116,20 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Orders Received</span>
-                  <span className="font-medium">{stats?.total_orders}</span>
+                  <span className="font-medium">
+                    {stats?.today_orders || 0}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Revenue Generated</span>
                   <span className="font-medium">
-                    KSh {stats?.total_revenue?.toLocaleString("en-KE")}
+                    KSh {(stats?.today_revenue || 0).toLocaleString("en-KE")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Average Order</span>
+                  <span className="text-gray-600">Cancelled Orders</span>
                   <span className="font-medium">
-                    KSh{" "}
-                    {stats?.total_orders
-                      ? (stats.total_revenue / stats.total_orders)
-                          .toFixed(2)
-                          .toLocaleString("en-KE")
-                      : 0}
+                    {stats?.today_cancelled || 0}
                   </span>
                 </div>
               </div>
@@ -126,23 +139,30 @@ const Dashboard = () => {
               <h2 className="text-lg font-medium text-orange-500 mb-4">
                 Most Popular Meal
               </h2>
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
-                  <ChartBarIcon className="h-6 w-6 text-primary-600" />
+              {stats?.popular_meal ? (
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
+                    <ChartBarIcon className="h-6 w-6 text-primary-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {stats.popular_meal.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Top selling item this week
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Average order value: KSh{" "}
+                      {stats.popular_meal.avg_price.toLocaleString("en-KE")}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {stats.popular_meal.order_count} orders
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Beef Stew with Rice
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Top selling item this week
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Average order value: KSh 425
-                  </p>
-                  <p className="text-sm text-gray-500">8 orders</p>
-                </div>
-              </div>
+              ) : (
+                <p>No popular meal data available</p>
+              )}
             </div>
           </div>
         </div>
@@ -177,8 +197,13 @@ const StatCard = ({ title, value, change, icon, color }) => {
 };
 
 const OrderItem = ({ order }) => {
+  const statusColors = {
+    delivered: "bg-green-50",
+    cancelled: "bg-red-50",
+  };
+
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-100 last:border-0">
+    <div className={`flex items-center justify-between p-4 rounded-lg ${statusColors[order.status] || 'bg-white'} border border-gray-100`}>
       <div className="flex items-center space-x-4">
         <div className="flex-shrink-0 bg-primary-100 rounded-full p-2">
           <ShoppingBagIcon className="h-5 w-5 text-primary-600" />
