@@ -6,6 +6,7 @@ import {
   CurrencyDollarIcon,
   ShoppingBagIcon,
   ArrowUpIcon,
+  ArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
 const Dashboard = () => {
@@ -33,6 +34,23 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  const calculateChange = (today, yesterday) => {
+    if (yesterday === 0) return '+100%'; // Avoid division by zero
+    const change = ((today - yesterday) / yesterday) * 100;
+    const changeValue = Math.round(change);
+    
+    return (
+      <span className={`flex items-center ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+        {change >= 0 ? (
+          <ArrowUpIcon className="h-4 w-4 mr-1" />
+        ) : (
+          <ArrowDownIcon className="h-4 w-4 mr-1" />
+        )}
+        {Math.abs(changeValue)}% from yesterday
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -50,28 +68,28 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Today's Orders"
-            value={stats?.total_orders}
-            change={`+2 from yesterday`}
+            value={stats?.today_orders || 0}
+            change={calculateChange(stats?.today_orders || 0, stats?.yesterday_orders || 0)}
             icon={<ShoppingBagIcon className="h-6 w-6 text-primary-500" />}
             color="primary"
           />
           <StatCard
             title="Today's Revenue"
-            value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE")}`}
-            change={`+125 from yesterday`}
+            value={`KSh ${(stats?.today_revenue || 0).toLocaleString("en-KE")}`}
+            change={calculateChange(stats?.today_revenue || 0, stats?.yesterday_revenue || 0)}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
             color="green"
           />
           <StatCard
-            title="Total Orders"
-            value={15}
+            title="Month Orders"
+            value={stats?.month_orders || 0}
             change="This month"
             icon={<ShoppingBagIcon className="h-6 w-6 text-blue-500" />}
             color="blue"
           />
           <StatCard
-            title="Total Revenue"
-            value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE")}`}
+            title="Month Revenue"
+            value={`KSh ${(stats?.month_revenue || 0).toLocaleString("en-KE")}`}
             change="This month"
             icon={<CurrencyDollarIcon className="h-6 w-6 text-purple-500" />}
             color="purple"
@@ -100,23 +118,18 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Orders Received</span>
-                  <span className="font-medium">{stats?.total_orders}</span>
+                  <span className="font-medium">{stats?.today_orders || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Revenue Generated</span>
                   <span className="font-medium">
-                    KSh {stats?.total_revenue?.toLocaleString("en-KE")}
+                    KSh {(stats?.today_revenue || 0).toLocaleString("en-KE")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Average Order</span>
+                  <span className="text-gray-600">Cancelled Orders</span>
                   <span className="font-medium">
-                    KSh{" "}
-                    {stats?.total_orders
-                      ? (stats.total_revenue / stats.total_orders)
-                          .toFixed(2)
-                          .toLocaleString("en-KE")
-                      : 0}
+                    {stats?.today_cancelled || 0}
                   </span>
                 </div>
               </div>
@@ -126,23 +139,29 @@ const Dashboard = () => {
               <h2 className="text-lg font-medium text-orange-500 mb-4">
                 Most Popular Meal
               </h2>
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
-                  <ChartBarIcon className="h-6 w-6 text-primary-600" />
+              {stats?.popular_meal ? (
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
+                    <ChartBarIcon className="h-6 w-6 text-primary-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {stats.popular_meal.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Top selling item this week
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Average order value: KSh {stats.popular_meal.avg_price.toLocaleString("en-KE")}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {stats.popular_meal.order_count} orders
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Beef Stew with Rice
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Top selling item this week
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Average order value: KSh 425
-                  </p>
-                  <p className="text-sm text-gray-500">8 orders</p>
-                </div>
-              </div>
+              ) : (
+                <p className="text-gray-500">No popular meal data available</p>
+              )}
             </div>
           </div>
         </div>
@@ -166,9 +185,8 @@ const StatCard = ({ title, value, change, icon, color }) => {
         <div className="text-right">
           <p className="text-sm text-gray-500">{title}</p>
           <p className="text-2xl font-semibold text-gray-900">{value}</p>
-          <div className="flex items-center justify-end text-sm text-gray-500">
-            <ArrowUpIcon className="h-4 w-4 text-green-500 mr-1" />
-            <span>{change}</span>
+          <div className="flex items-center justify-end text-sm">
+            {change}
           </div>
         </div>
       </div>
@@ -177,8 +195,24 @@ const StatCard = ({ title, value, change, icon, color }) => {
 };
 
 const OrderItem = ({ order }) => {
+  const statusColors = {
+    delivered: 'bg-green-50 border-green-100',
+    cancelled: 'bg-red-50 border-red-100',
+    confirmed: 'bg-yellow-50 border-yellow-100',
+    preparing: 'bg-blue-50 border-blue-100',
+    ready: 'bg-gray-50 border-gray-100',
+  };
+
+  const statusTextColors = {
+    delivered: 'text-green-800',
+    cancelled: 'text-red-800',
+    confirmed: 'text-yellow-800',
+    preparing: 'text-blue-800',
+    ready: 'text-gray-800',
+  };
+
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-100 last:border-0">
+    <div className={`flex items-center justify-between p-4 rounded-lg ${statusColors[order.status] || 'bg-white'} border`}>
       <div className="flex items-center space-x-4">
         <div className="flex-shrink-0 bg-primary-100 rounded-full p-2">
           <ShoppingBagIcon className="h-5 w-5 text-primary-600" />
@@ -186,6 +220,9 @@ const OrderItem = ({ order }) => {
         <div>
           <h3 className="font-medium text-gray-900">{order.meal_name}</h3>
           <p className="text-sm text-gray-500">{order.customer_email}</p>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${statusTextColors[order.status]}`}>
+            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+          </span>
         </div>
       </div>
       <div className="text-right">
@@ -197,7 +234,6 @@ const OrderItem = ({ order }) => {
             hour: "2-digit",
             minute: "2-digit",
             hour12: true,
-            timeZone: "Africa/Nairobi",
           })}
         </p>
       </div>

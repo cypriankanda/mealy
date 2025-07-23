@@ -48,6 +48,16 @@ const OrdersManagement = () => {
     }
   };
 
+  // Calculate revenue excluding cancelled orders
+  const calculateRevenue = (orders, todayOnly = false) => {
+    return orders
+      .filter(order => 
+        order.status !== 'cancelled' &&
+        (!todayOnly || new Date(order.created_at).toDateString() === new Date().toDateString())
+      )
+      .reduce((sum, order) => sum + order.price, 0);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -67,41 +77,26 @@ const OrdersManagement = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <StatCard
             title="Today's Orders"
-            value={
-              orders.filter(
-                (o) =>
-                  new Date(o.created_at).toDateString() ===
-                  new Date().toDateString()
-              ).length
-            }
+            value={orders.filter(o => 
+              new Date(o.created_at).toDateString() === new Date().toDateString()
+            ).length}
             icon={<ShoppingBagIcon className="h-6 w-6 text-primary-500" />}
           />
           <StatCard
             title="Pending Orders"
-            value={
-              orders.filter((o) =>
-                ["confirmed", "preparing", "ready"].includes(o.status)
-              ).length
-            }
+            value={orders.filter(o => 
+              ["confirmed", "preparing", "ready"].includes(o.status)
+            ).length}
             icon={<ClockIcon className="h-6 w-6 text-yellow-500" />}
           />
           <StatCard
             title="Today's Revenue"
-            value={`KSh ${orders
-              .filter(
-                (o) =>
-                  new Date(o.created_at).toDateString() ===
-                  new Date().toDateString()
-              )
-              .reduce((sum, o) => sum + o.price, 0)
-              .toLocaleString("en-KE")}`}
+            value={`KSh ${calculateRevenue(orders, true).toLocaleString("en-KE")}`}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
           />
           <StatCard
             title="Total Revenue"
-            value={`KSh ${orders
-              .reduce((sum, o) => sum + o.price, 0)
-              .toLocaleString("en-KE")}`}
+            value={`KSh ${calculateRevenue(orders).toLocaleString("en-KE")}`}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-blue-500" />}
           />
         </div>
