@@ -1,5 +1,0 @@
-[build]
-builder = "nixpacks"
-
-[start]
-cmd = "gunicorn run:app"
