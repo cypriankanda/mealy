@@ -45,7 +45,11 @@ def create_app(config_name=None):
     'http://localhost:5174',  # Vite dev server
     'http://localhost:3000',  # React dev server
     'http://localhost:5173',  # Alternative Vite port
-    'http://127.0.0.1:5174',  # Alternative localhost format
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:3000',  # Alternative localhost format
+    'https://mealy-xi.vercel.app',  # Vercel deployment
+    'http://mealy-xi.vercel.app',  # Vercel deployment (HTTP)
+    'https://mealy.vercel.app',  # Alternative Vercel domain
 ], supports_credentials=True)
     # Import models (needed for migrations) - FIXED: Import actual classes
     from app.models.user import User, Caterer
