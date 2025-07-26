@@ -17,20 +17,20 @@ const OrdersManagement = () => {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      try {
-        let url = "/admin/orders";
-        if (activeTab === "pending") {
-          url += "?status=confirmed,preparing,ready";
-        }
+  try {
+    let params = {};
+    if (activeTab === "pending") {
+      params.status = ["confirmed", "preparing", "ready"];
+    }
 
-        const response = await api.get(url);
-        setOrders(response.data.data);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const response = await api.get("/admin/orders", { params });
+    setOrders(response.data.data);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
     fetchOrders();
   }, [activeTab]);
@@ -55,6 +55,23 @@ const OrdersManagement = () => {
       </div>
     );
   }
+
+  const calculateTodaysRevenue = () => {
+    return orders
+      .filter(
+        (o) =>
+          new Date(o.created_at).toDateString() === new Date().toDateString() &&
+          o.status !== "cancelled"
+      )
+      .reduce((sum, o) => sum + o.price, 0);
+  };
+
+  // Calculate total revenue excluding canceled orders
+  const calculateTotalRevenue = () => {
+    return orders
+      .filter((o) => o.status !== "cancelled")
+      .reduce((sum, o) => sum + o.price, 0);
+  };
 
   return (
     <div className="space-y-6">
@@ -87,21 +104,12 @@ const OrdersManagement = () => {
           />
           <StatCard
             title="Today's Revenue"
-            value={`KSh ${orders
-              .filter(
-                (o) =>
-                  new Date(o.created_at).toDateString() ===
-                  new Date().toDateString()
-              )
-              .reduce((sum, o) => sum + o.price, 0)
-              .toLocaleString("en-KE")}`}
+            value={`KSh ${calculateTodaysRevenue().toLocaleString("en-KE")}`}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
           />
           <StatCard
             title="Total Revenue"
-            value={`KSh ${orders
-              .reduce((sum, o) => sum + o.price, 0)
-              .toLocaleString("en-KE")}`}
+            value={`KSh ${calculateTotalRevenue().toLocaleString("en-KE")}`}
             icon={<CurrencyDollarIcon className="h-6 w-6 text-blue-500" />}
           />
         </div>

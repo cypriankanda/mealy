@@ -46,6 +46,83 @@ class Order(db.Model):
         self.price =int(price)
         self.special_instructions = special_instructions
     
+    @property
+    def price_kes(self):
+        """Get price in KES """
+        return self.price
+    
+    @classmethod
+    def create_order(cls, user_id, meal_id, menu_date, price, special_instructions=None):
+        """
+        Create new order with validation
+        Returns (order, error_message) tuple
+        """
+        try:
+            # Check if user already has an order for this date
+            existing_order = cls.query.filter_by(
+                user_id=user_id,
+                menu_date=menu_date,
+                status='confirmed'
+            ).first()
+            
+            if existing_order:
+                return None, "You already have an order for this date"
+            
+            # Create new order
+            order = cls(
+                user_id=user_id,
+                meal_id=meal_id,
+                menu_date=menu_date,
+                price=price,
+                special_instructions=special_instructions
+            )
+            
+            db.session.add(order)
+            db.session.commit()
+            return order, None
+            
+        except Exception as e:
+            db.session.rollback()
+            return None, f"Failed to create order: {str(e)}"
+    
+    def update_status(self, new_status):
+        """Update order status with validation"""
+        valid_statuses = ['confirmed', 'preparing', 'ready', 'delivered', 'cancelled']
+        
+        if new_status not in valid_statuses:
+            return False, f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+        
+        # Validate status transitions
+        current_status = self.status
+        
+        # Define valid transitions
+        valid_transitions = {
+            'confirmed': ['preparing', 'cancelled'],
+            'preparing': ['ready', 'cancelled'],
+            'ready': ['delivered', 'cancelled'],
+            'delivered': [],  # Terminal state
+            'cancelled': []   # Terminal state
+        }
+        
+        if new_status not in valid_transitions.get(current_status, []):
+            return False, f"Cannot change status from {current_status} to {new_status}"
+        
+        try:
+            self.status = new_status
+            self.updated_at = datetime.utcnow()
+            db.session.commit()
+            return True, None
+        except Exception as e:
+            db.session.rollback()
+            return False, str(e)
+    
+    def cancel_order(self):
+        """Cancel the order if allowed"""
+        if self.status in ['delivered', 'cancelled']:
+            return False, f"Cannot cancel order with status: {self.status}"
+        
+        return self.update_status('cancelled')
+    
     def to_dict(self):
         """Convert order to dictionary for JSON serialization"""
         return {
@@ -53,7 +130,7 @@ class Order(db.Model):
             'user_id': self.user_id,
             'meal_id': self.meal_id,
             'meal_name': self.meal.name if self.meal else None,
-            'price': float(self.price),
+            'price': self.price_kes,
             'menu_date': self.menu_date.isoformat(),
             'status': self.status,
             'special_instructions': self.special_instructions,
@@ -67,7 +144,7 @@ class Order(db.Model):
             'order_id': self.id,
             'customer_email': self.customer.email if self.customer else None,
             'meal_name': self.meal.name if self.meal else None,
-            'price': float(self.price),
+            'price': self.price_kes,
             'menu_date': self.menu_date.isoformat(),
             'status': self.status,
             'special_instructions': self.special_instructions,
@@ -80,7 +157,7 @@ class Order(db.Model):
         return {
             'order_id': self.id,
             'meal_name': self.meal.name if self.meal else None,
-            'price': float(self.price),
+            'price': self.price_kes,
             'menu_date': self.menu_date.isoformat(),
             'status': self.status,
             'created_at': self.created_at.isoformat()
@@ -125,45 +202,31 @@ class Order(db.Model):
         """Get dashboard statistics for admin"""
         # Base query filtered by caterer
         base_query = cls.query.join(cls.meal).filter_by(caterer_id=caterer_id)
-    
+        
         if date_filter:
-           base_query = base_query.filter(cls.menu_date == date_filter)
+            base_query = base_query.filter(cls.menu_date == date_filter)
         else:
             # Default to today
             base_query = base_query.filter(cls.menu_date == date.today())
-    
-        # Get all orders for calculations
-        orders = base_query.filter(cls.status != 'cancelled').all()
-    
-        # Calculate metrics
-        total_orders = len(orders)
-        total_revenue = sum(order.price for order in orders)
-    
-        # Calculate most popular meal
-        meal_counts = {}
-        for order in orders:
-            meal_name = order.meal.name if order.meal else 'Unknown'
-            meal_counts[meal_name] = meal_counts.get(meal_name, 0) + 1
-    
-        most_popular = max(meal_counts.items(), key=lambda x: x[1], default=('None', 0))
-    
-        # Calculate average order value
-        avg_order = total_revenue / total_orders if total_orders > 0 else 0
-    
+        
+        # Get counts and revenue
+        total_orders = base_query.count()
+        confirmed_orders = base_query.filter(cls.status != 'cancelled').count()
+        total_revenue = base_query.filter(cls.status != 'cancelled')\
+            .with_entities(func.sum(cls.price)).scalar() or 0
+        
         # Get status breakdown
         status_counts = {}
         for status in ['confirmed', 'preparing', 'ready', 'delivered', 'cancelled']:
             count = base_query.filter(cls.status == status).count()
             status_counts[status] = count
-    
+        
         return {
             'total_orders': total_orders,
-            'total_revenue': total_revenue,
-            'most_popular_meal': {
-                'name': most_popular[0],
-                'count': most_popular[1],
-                'avg_price': sum(o.price for o in orders if o.meal and o.meal.name == most_popular[0]) / most_popular[1] if most_popular[1] > 0 else 0
-            },
-            'avg_order': avg_order,
+            'confirmed_orders': confirmed_orders,
+            'total_revenue': total_revenue,  # Convert to Kenya shillings
             'status_counts': status_counts
-    }
+        }
+    
+    def __repr__(self):
+        return f'<Order {self.id} - {self.status} - KES {self.price_kes}>'
