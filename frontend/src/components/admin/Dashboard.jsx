@@ -31,33 +31,36 @@ const Dashboard = () => {
         const allOrders = allOrdersResponse.data.data;
 
         // Filter orders for today and yesterday
-        const todayOrders = allOrders.filter(order => 
-          new Date(order.created_at).toDateString() === today.toDateString()
+        const todayOrders = allOrders.filter(
+          (order) =>
+            new Date(order.created_at).toDateString() === today.toDateString()
         );
-        const yesterdayOrders = allOrders.filter(order => 
-          new Date(order.created_at).toDateString() === yesterday.toDateString()
+        const yesterdayOrders = allOrders.filter(
+          (order) =>
+            new Date(order.created_at).toDateString() ===
+            yesterday.toDateString()
         );
 
         // Calculate today's stats
         const todayStats = {
           total_orders: todayOrders.length,
           total_revenue: todayOrders
-            .filter(order => order.status !== 'cancelled')
+            .filter((order) => order.status !== "cancelled")
             .reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: todayOrders
-            .filter(order => order.status === 'cancelled')
-            .length
+          cancelled_orders: todayOrders.filter(
+            (order) => order.status === "cancelled"
+          ).length,
         };
 
         // Calculate yesterday's stats
         const yesterdayStats = {
           total_orders: yesterdayOrders.length,
           total_revenue: yesterdayOrders
-            .filter(order => order.status !== 'cancelled')
+            .filter((order) => order.status !== "cancelled")
             .reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: yesterdayOrders
-            .filter(order => order.status === 'cancelled')
-            .length
+          cancelled_orders: yesterdayOrders.filter(
+            (order) => order.status === "cancelled"
+          ).length,
         };
 
         // Get recent orders
@@ -71,7 +74,7 @@ const Dashboard = () => {
         // Calculate monthly orders
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
-        const monthlyCount = allOrders.filter(order => {
+        const monthlyCount = allOrders.filter((order) => {
           const orderDate = new Date(order.created_at);
           return (
             orderDate.getMonth() === currentMonth &&
@@ -80,34 +83,49 @@ const Dashboard = () => {
         }).length;
         setMonthlyOrders(monthlyCount);
 
-        // Calculate most popular meal from recent orders
-        const mealCounts = {};
-        const mealRevenue = {};
+        // Calculate most popular meal of the week
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+        const endOfWeek = new Date(today);
+        endOfWeek.setDate(today.getDate() + (6 - today.getDay())); // Saturday
 
-        recentOrdersResponse.data.data.forEach((order) => {
-          if (order.status !== "cancelled") {
-            mealCounts[order.meal_name] = (mealCounts[order.meal_name] || 0) + 1;
-            mealRevenue[order.meal_name] = (mealRevenue[order.meal_name] || 0) + order.price;
+        const weeklyMealCounts = {};
+        const weeklyMealRevenue = {};
+
+        allOrders.forEach((order) => {
+          const orderDate = new Date(order.created_at);
+          if (
+            orderDate >= startOfWeek &&
+            orderDate <= endOfWeek &&
+            order.status !== "cancelled"
+          ) {
+            weeklyMealCounts[order.meal_name] =
+              (weeklyMealCounts[order.meal_name] || 0) + 1;
+            weeklyMealRevenue[order.meal_name] =
+              (weeklyMealRevenue[order.meal_name] || 0) + order.price;
           }
         });
 
-        let mostPopular = null;
-        Object.entries(mealCounts).forEach(([name, count]) => {
-          if (!mostPopular || count > mostPopular.count) {
-            mostPopular = {
+        let mostPopularWeekly = null;
+        Object.entries(weeklyMealCounts).forEach(([name, count]) => {
+          if (!mostPopularWeekly || count > mostPopularWeekly.count) {
+            mostPopularWeekly = {
               name,
               count,
-              total_revenue: mealRevenue[name],
+              total_revenue: weeklyMealRevenue[name],
             };
           }
         });
 
-        if (mostPopular) {
+        if (mostPopularWeekly) {
           setPopularMeal({
-            name: mostPopular.name,
-            order_count: mostPopular.count,
-            average_price: mostPopular.total_revenue / mostPopular.count,
+            name: mostPopularWeekly.name,
+            order_count: mostPopularWeekly.count,
+            average_price:
+              mostPopularWeekly.total_revenue / mostPopularWeekly.count,
           });
+        } else {
+          setPopularMeal(null);
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -120,7 +138,11 @@ const Dashboard = () => {
   }, []);
 
   // Calculate comparison with yesterday
-  const getComparisonText = (todayValue, yesterdayValue, isCurrency = false) => {
+  const getComparisonText = (
+    todayValue,
+    yesterdayValue,
+    isCurrency = false
+  ) => {
     if (yesterdayValue === undefined || yesterdayValue === 0) {
       return "No data for yesterday";
     }
@@ -128,24 +150,26 @@ const Dashboard = () => {
     const difference = todayValue - yesterdayValue;
     const percentage = Math.round((difference / yesterdayValue) * 100);
     const absoluteDifference = Math.abs(difference);
-    
-    const formattedDifference = isCurrency 
-      ? `KSh ${absoluteDifference.toLocaleString("en-KE")}` 
+
+    const formattedDifference = isCurrency
+      ? `KSh ${absoluteDifference.toLocaleString("en-KE")}`
       : absoluteDifference;
 
     return {
-      text: `${difference >= 0 ? '+' : '-'}${formattedDifference} (${Math.abs(percentage)}%) from yesterday`,
-      isIncrease: difference >= 0
+      text: `${difference >= 0 ? "+" : "-"}${formattedDifference} (${Math.abs(
+        percentage
+      )}%) from yesterday`,
+      isIncrease: difference >= 0,
     };
   };
 
   const ordersComparison = getComparisonText(
-    stats?.total_orders || 0, 
+    stats?.total_orders || 0,
     yesterdayStats?.total_orders || 0
   );
 
   const revenueComparison = getComparisonText(
-    stats?.total_revenue || 0, 
+    stats?.total_revenue || 0,
     yesterdayStats?.total_revenue || 0,
     true
   );
@@ -250,13 +274,10 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Cancelled Orders</span>
                   <div className="flex items-center">
-                    <span className="font-medium mr-2">{cancelledOrdersCount}</span>
+                    <span className="font-medium mr-2">
+                      {cancelledOrdersCount}
+                    </span>
                     <div className="flex items-center text-sm text-gray-500">
-                      {/* {cancelledComparison.isIncrease ? (
-                        <ArrowUpIcon className="h-4 w-4 text-red-500 mr-1" />
-                      ) : (
-                        <ArrowDownIcon className="h-4 w-4 text-green-500 mr-1" />
-                      )} */}
                       <span>{cancelledComparison.text}</span>
                     </div>
                   </div>
@@ -266,7 +287,7 @@ const Dashboard = () => {
 
             <div className="mt-6 bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-medium text-orange-500 mb-4">
-                Most Popular Meal
+                Most Popular Meal This Week
               </h2>
               {popularMeal ? (
                 <div className="flex items-center space-x-4">
@@ -280,17 +301,19 @@ const Dashboard = () => {
                     <p className="text-sm text-gray-500">
                       Top selling item this week
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    {/* <p className="text-sm text-gray-500 mt-1">
                       Average order value: KSh{" "}
                       {popularMeal.average_price?.toFixed(2) || "0"}
-                    </p>
+                    </p> */}
                     <p className="text-sm text-gray-500">
-                      {popularMeal.order_count} orders
+                      {popularMeal.order_count} orders this week
                     </p>
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500">No popular meal data available</p>
+                <p className="text-gray-500">
+                  No popular meal data available this week
+                </p>
               )}
             </div>
           </div>
