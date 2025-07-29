@@ -103,8 +103,49 @@ const OrdersManagement = () => {
   if (loading) {
     return (
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
-        <div className="flex justify-center items-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div
+            className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "0s" }}
+          ></div>
+          <div
+            className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "2s" }}
+          ></div>
+          <div
+            className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "4s" }}
+          ></div>
+          <div
+            className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "6s" }}
+          ></div>
+          <div
+            className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "8s" }}
+          ></div>
+        </div>
+
+        <div className="flex justify-center items-center h-screen relative z-10">
+          <div className="text-center">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-transparent bg-gradient-to-r from-orange-500 to-green-500 rounded-full"></div>
+              <div
+                className="absolute inset-2 animate-spin rounded-full border-4 border-transparent bg-gradient-to-r from-green-500 to-orange-500 rounded-full"
+                style={{
+                  animationDirection: "reverse",
+                  animationDuration: "1.5s",
+                }}
+              ></div>
+            </div>
+            <p className="mt-6 text-lg font-medium bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">
+              Loading orders data...
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
+              Please wait while we load your orders
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -120,7 +161,8 @@ const OrdersManagement = () => {
             Orders Management
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
-            Efficiently manage all customer orders, update statuses, and track revenue.
+            Efficiently manage all customer orders, update statuses, and track
+            revenue.
           </p>
         </div>
 
@@ -159,7 +201,10 @@ const OrdersManagement = () => {
           />
         </div>
 
-        <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-4 sm:p-6 animate-slide-up" style={{ animationDelay: '400ms' }}>
+        <div
+          className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-4 sm:p-6 animate-slide-up"
+          style={{ animationDelay: "400ms" }}
+        >
           <div className="mb-4 border-b border-gray-200">
             <nav className="-mb-px flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-2">
               <TabButton
@@ -186,9 +231,13 @@ const OrdersManagement = () => {
           </div>
 
           <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4">
-            {activeTab === "pending" ? "Pending Orders" : 
-             activeTab === "delivered" ? "Delivered Orders" :
-             activeTab === "cancelled" ? "Cancelled Orders" : "All Customer Orders"}
+            {activeTab === "pending"
+              ? "Pending Orders"
+              : activeTab === "delivered"
+              ? "Delivered Orders"
+              : activeTab === "cancelled"
+              ? "Cancelled Orders"
+              : "All Customer Orders"}
           </h2>
 
           <div className="space-y-4">
@@ -196,11 +245,19 @@ const OrdersManagement = () => {
               <div className="text-center py-12">
                 <ShoppingBagIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-500 mb-2">
-                  No {activeTab === "pending" ? "pending" : 
-                      activeTab === "delivered" ? "delivered" : 
-                      activeTab === "cancelled" ? "cancelled" : ""} orders found
+                  No{" "}
+                  {activeTab === "pending"
+                    ? "pending"
+                    : activeTab === "delivered"
+                    ? "delivered"
+                    : activeTab === "cancelled"
+                    ? "cancelled"
+                    : ""}{" "}
+                  orders found
                 </h3>
-                <p className="text-gray-400">Looks like it's quiet here. Check back later!</p>
+                <p className="text-gray-400">
+                  Looks like it's quiet here. Check back later!
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -220,12 +277,21 @@ const OrdersManagement = () => {
 
       <style jsx>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
         }
         @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         @keyframes slide-up {
           from {
@@ -259,16 +325,18 @@ const StatCard = ({ title, value, icon, gradient, delay }) => {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <div className={`rounded-2xl p-3 sm:p-4 bg-gradient-to-r ${gradient} shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
-          <div className="text-white">
-            {icon}
-          </div>
+        <div
+          className={`rounded-2xl p-3 sm:p-4 bg-gradient-to-r ${gradient} shadow-lg group-hover:shadow-xl transition-shadow duration-300`}
+        >
+          <div className="text-white">{icon}</div>
         </div>
       </div>
 
       <div>
         <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-        <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{value}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -278,9 +346,10 @@ const TabButton = ({ label, isActive, onClick }) => (
   <button
     onClick={onClick}
     className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200
-      ${isActive
-        ? "border-orange-500 text-orange-600 font-semibold"
-        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+      ${
+        isActive
+          ? "border-orange-500 text-orange-600 font-semibold"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
       }`}
   >
     {label}
@@ -292,24 +361,24 @@ const OrderCard = ({ order, onStatusUpdate, delay }) => {
     const configs = {
       delivered: {
         gradient: "from-green-400 to-green-600",
-        icon: <CheckCircleIcon className="h-4 w-4" />
+        icon: <CheckCircleIcon className="h-4 w-4" />,
       },
       cancelled: {
         gradient: "from-red-400 to-red-600",
-        icon: <XCircleIcon className="h-4 w-4" />
+        icon: <XCircleIcon className="h-4 w-4" />,
       },
       ready: {
         gradient: "from-blue-400 to-blue-600",
-        icon: <CheckCircleIcon className="h-4 w-4" />
+        icon: <CheckCircleIcon className="h-4 w-4" />,
       },
       preparing: {
         gradient: "from-yellow-400 to-yellow-600",
-        icon: <CogIcon className="h-4 w-4 animate-spin" />
+        icon: <CogIcon className="h-4 w-4 animate-spin" />,
       },
       confirmed: {
         gradient: "from-orange-400 to-orange-600",
-        icon: <ClockIcon className="h-4 w-4" />
-      }
+        icon: <ClockIcon className="h-4 w-4" />,
+      },
     };
     return configs[status] || configs.confirmed;
   };
@@ -318,16 +387,40 @@ const OrderCard = ({ order, onStatusUpdate, delay }) => {
 
   const statusActions = {
     confirmed: [
-      { label: "Start Preparing", status: "preparing", gradient: "from-blue-500 to-blue-700" },
-      { label: "Cancel", status: "cancelled", gradient: "from-red-500 to-red-700" },
+      {
+        label: "Start Preparing",
+        status: "preparing",
+        gradient: "from-blue-500 to-blue-700",
+      },
+      {
+        label: "Cancel",
+        status: "cancelled",
+        gradient: "from-red-500 to-red-700",
+      },
     ],
     preparing: [
-      { label: "Mark Ready", status: "ready", gradient: "from-green-500 to-green-700" },
-      { label: "Cancel", status: "cancelled", gradient: "from-red-500 to-red-700" },
+      {
+        label: "Mark Ready",
+        status: "ready",
+        gradient: "from-green-500 to-green-700",
+      },
+      {
+        label: "Cancel",
+        status: "cancelled",
+        gradient: "from-red-500 to-red-700",
+      },
     ],
     ready: [
-      { label: "Mark Delivered", status: "delivered", gradient: "from-green-500 to-green-700" },
-      { label: "Cancel", status: "cancelled", gradient: "from-red-500 to-red-700" },
+      {
+        label: "Mark Delivered",
+        status: "delivered",
+        gradient: "from-green-500 to-green-700",
+      },
+      {
+        label: "Cancel",
+        status: "cancelled",
+        gradient: "from-red-500 to-red-700",
+      },
     ],
   };
 
@@ -337,7 +430,9 @@ const OrderCard = ({ order, onStatusUpdate, delay }) => {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex justify-between items-start mb-3">
-        <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white shadow-md bg-gradient-to-r ${statusPillConfig.gradient}`}>
+        <div
+          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white shadow-md bg-gradient-to-r ${statusPillConfig.gradient}`}
+        >
           {statusPillConfig.icon}
           <span className="ml-1 capitalize">{order.status}</span>
         </div>
@@ -350,7 +445,10 @@ const OrderCard = ({ order, onStatusUpdate, delay }) => {
         {order.meal_name}
       </h3>
       <p className="text-sm text-gray-600 mb-3 truncate">
-        Order from: <span className="font-medium text-gray-800">{order.customer_email}</span>
+        Order from:{" "}
+        <span className="font-medium text-gray-800">
+          {order.customer_email}
+        </span>
       </p>
 
       <div className="flex items-center text-sm text-gray-500 mb-4">
