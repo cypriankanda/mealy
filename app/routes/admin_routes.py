@@ -128,7 +128,7 @@ def get_all_orders():
             'order_id': order.id,
             'customer_email': order.customer.email,
             'meal_name': order.meal.name,
-            'price': order.price_kes,
+            'price': order.price,
             'menu_date': order.menu_date.isoformat(),
             'status': order.status,
             'created_at': order.created_at.isoformat()
