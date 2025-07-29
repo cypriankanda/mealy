@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
-import MealForm from './MealForm'
+import { PlusIcon, PencilIcon, TrashIcon, XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+import MealForm from './MealForm' // Assuming MealForm handles its own responsive and modal styling
 
 const MealsManagement = () => {
   useAuth()
@@ -13,11 +13,13 @@ const MealsManagement = () => {
 
   useEffect(() => {
     const fetchMeals = async () => {
+      setLoading(true); // Ensure loader shows when fetching
       try {
         const response = await api.get('/admin/meals')
         setMeals(response.data)
       } catch (error) {
         console.error('Error fetching meals:', error)
+        // Optionally, show an error message to the user
       } finally {
         setLoading(false)
       }
@@ -29,7 +31,7 @@ const MealsManagement = () => {
   const handleCreateMeal = async (mealData) => {
     try {
       const response = await api.post('/admin/meals', mealData)
-      setMeals([response.data, ...meals])
+      setMeals([response.data, ...meals]) // Add new meal to the top
       setIsFormOpen(false)
     } catch (error) {
       console.error('Error creating meal:', error)
@@ -44,6 +46,7 @@ const MealsManagement = () => {
         meal.id === mealId ? response.data : meal
       ))
       setEditingMeal(null)
+      setIsFormOpen(false); // Close form after update
     } catch (error) {
       console.error('Error updating meal:', error)
       throw error.response?.data?.message || 'Failed to update meal'
@@ -51,61 +54,118 @@ const MealsManagement = () => {
   }
 
   const handleDeleteMeal = async (mealId) => {
-    try {
-      await api.delete(`/admin/meals/${mealId}`)
-      setMeals(meals.filter(meal => meal.id !== mealId))
-    } catch (error) {
-      console.error('Error marking meal as unavailable:', error)
-      // Optionally show a toast or alert here
+    // Implement a confirmation dialog here instead of direct deletion
+    // For now, direct deletion for simplicity, but a modal confirmation is recommended.
+    if (window.confirm("Are you sure you want to delete this meal? This action cannot be undone.")) {
+      try {
+        await api.delete(`/admin/meals/${mealId}`)
+        setMeals(meals.filter(meal => meal.id !== mealId))
+      } catch (error) {
+        console.error('Error deleting meal:', error)
+        // Optionally show a toast or alert here
+      }
     }
   }
 
+  // Loader component, matching the dashboard's animated background
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
+        {/* Animated Background Elements - same as Dashboard */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0s' }}></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+          <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '6s' }}></div>
+          <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '8s' }}></div>
+        </div>
+
+        <div className="flex justify-center items-center h-screen relative z-10">
+          <div className="text-center">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-transparent bg-gradient-to-r from-orange-500 to-green-500 rounded-full"></div>
+              <div className="absolute inset-2 animate-spin rounded-full border-4 border-transparent bg-gradient-to-r from-green-500 to-orange-500 rounded-full" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            </div>
+            <p className="mt-6 text-lg font-medium bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">
+              Fetching your meal inventory...
+            </p>
+            <p className="mt-2 text-sm text-gray-500">Please wait while we load your meals</p>
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Manage Meals</h1>
-        <p className="text-gray-600 mb-6">Add and manage your meal offerings</p>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
+      {/* Animated Background Elements - same as Dashboard */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0s' }}></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '6s' }}></div>
+        <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '8s' }}></div>
+      </div>
+
+      <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in">
+        {/* Header Section */}
+        <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            Meal Management
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            Add, edit, and manage your catering meal offerings.
+          </p>
+        </div>
         
-        <button
-          onClick={() => {
-            setEditingMeal(null)
-            setIsFormOpen(true)
-          }}
-          className="mb-6 cursor-pointer inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-        >
-          <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-          Add Meal
-        </button>
+        {/* Add Meal Button */}
+        <div className="flex justify-end animate-slide-up" style={{ animationDelay: '400ms' }}>
+          <button
+            onClick={() => {
+              setEditingMeal(null)
+              setIsFormOpen(true)
+            }}
+            className="inline-flex items-center px-5 py-2.5 border border-transparent text-base font-medium rounded-full shadow-lg text-white 
+                       bg-gradient-to-r from-orange-500 to-green-500 hover:from-orange-600 hover:to-green-600 
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 transform hover:scale-105"
+          >
+            <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+            Add New Meal
+          </button>
+        </div>
         
-        <div className="space-y-4">
-          {meals.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No meals found. Add your first meal!</p>
-            </div>
-          ) : (
-            meals.map((meal) => (
-              <MealItem 
-                key={meal.id} 
-                meal={meal} 
-                onEdit={() => {
-                  setEditingMeal(meal)
-                  setIsFormOpen(true)
-                }}
-                onDelete={() => handleDeleteMeal(meal.id)}
-              />
-            ))
-          )}
+        {/* Meals List */}
+        <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-4 sm:p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
+          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-6">
+            Your Meal Offerings
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"> {/* Responsive grid */}
+            {meals.length === 0 ? (
+              <div className="lg:col-span-3 text-center py-12"> {/* Span full width on empty */}
+                <ShoppingBagIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-500 mb-2">No meals found.</h3>
+                <p className="text-gray-400">Click "Add New Meal" to get started!</p>
+              </div>
+            ) : (
+              meals.map((meal, index) => (
+                <MealItem 
+                  key={meal.id} 
+                  meal={meal} 
+                  onEdit={() => {
+                    setEditingMeal(meal)
+                    setIsFormOpen(true)
+                  }}
+                  onDelete={() => handleDeleteMeal(meal.id)}
+                  delay={`${600 + index * 50}`} // Staggered animation
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
       
+      {/* MealForm Modal (assuming it's a modal or similar overlay) */}
       <MealForm 
         isOpen={isFormOpen}
         onClose={() => {
@@ -118,36 +178,89 @@ const MealsManagement = () => {
         }
         initialData={editingMeal || { name: '', description: '', price: '' }}
       />
+
+      {/* Tailwind CSS Animations (copy from dashboard or define in a global CSS file) */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slide-up {
+          from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+        .animate-slide-up {
+          opacity: 0;
+          animation: slide-up 0.6s ease-out forwards;
+        }
+      `}</style>
     </div>
   )
 }
 
-const MealItem = ({ meal, onEdit, onDelete }) => {
+const MealItem = ({ meal, onEdit, onDelete, delay }) => {
   return (
-    <div className={`bg-white p-4 rounded-lg shadow-sm border border-gray-100 ${meal.is_active === false ? 'opacity-50' : ''}`}>
-      <div className="flex justify-between items-start">
+    <div 
+      className={`backdrop-blur-lg bg-white/70 border border-white/20 shadow-xl rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300 animate-slide-up ${meal.is_active === false ? 'opacity-70 grayscale' : ''}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-medium text-gray-900">{meal.name}</h3>
-          <p className="text-sm text-gray-500 mt-1">{meal.description}</p>
-          <p className="text-sm font-medium text-gray-900 mt-2">KSh {meal.price.toLocaleString('en-KE')}</p>
-          {meal.is_active === false && (
-            <span className="text-xs text-red-500 font-semibold">Unavailable</span>
-          )}
+          <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">{meal.name}</h3>
+          <p className="text-sm text-gray-600 mb-2">{meal.description}</p>
+          <p className="text-lg font-semibold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+            KSh {Number(meal.price).toLocaleString('en-KE')}
+          </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-col space-y-2"> {/* Stack buttons vertically on small screens */}
           <button
             onClick={onEdit}
-            className="inline-flex items-center p-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            className="inline-flex items-center justify-center p-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white 
+                       bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-110"
+            title="Edit Meal"
           >
             <PencilIcon className="h-4 w-4" />
           </button>
           <button
             onClick={onDelete}
-            className="inline-flex items-center p-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="inline-flex items-center justify-center p-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white 
+                       bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 transform hover:scale-110"
+            title="Delete Meal"
           >
             <TrashIcon className="h-4 w-4" />
           </button>
         </div>
+      </div>
+      
+      {/* Availability Status Pill */}
+      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+        {meal.is_active === false ? (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <XCircleIcon className="h-4 w-4 mr-1" /> Unavailable
+          </span>
+        ) : (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircleIcon className="h-4 w-4 mr-1" /> Available
+          </span>
+        )}
       </div>
     </div>
   )

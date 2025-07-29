@@ -1,179 +1,207 @@
 import { useState, useEffect } from 'react';
+import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'; // Changed XIcon to XMarkIcon for newer Heroicons
 
 const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
-  const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    description: initialData?.description || '',
-    price: initialData?.price || '',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState(initialData);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      // Disable scrolling on the body when modal is open
-      document.body.style.overflow = 'hidden';
-      setShowModal(true);
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen]);
+    setFormData(initialData);
+    setErrors({}); // Clear errors when form opens or initialData changes
+  }, [initialData, isOpen]);
+
+  if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: name === 'price' ? parseFloat(value) || '' : value, // Convert price to float
     }));
+    // Clear error for the field being changed
+    if (errors[name]) {
+      setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    let newErrors = {};
+    if (!formData.name || formData.name.trim() === '') {
+      newErrors.name = 'Meal name is required';
+    }
+    if (!formData.description || formData.description.trim() === '') {
+      newErrors.description = 'Description is required';
+    }
+    if (!formData.price || isNaN(formData.price) || parseFloat(formData.price) <= 0) {
+      newErrors.price = 'Price must be a positive number';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await onSubmit({
-        ...formData,
-        price: parseFloat(formData.price)
-      });
-      handleClose();
+      await onSubmit(formData);
+      // Form closes on successful submission, handled by parent
     } catch (err) {
-      setError(err.message || 'An error occurred');
+      console.error('Submission error:', err);
+      // Display a general error or specific field error if returned by onSubmit
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        general: err, // Assuming err can be a string or object with a message
+      }));
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    setShowModal(false);
-    setTimeout(onClose, 300); // Match this with the transition duration
-  };
-
-  if (!isOpen && !showModal) return null;
+  const formTitle = initialData.id ? `Edit Meal: ${initialData.name}` : 'Add New Meal';
+  const submitButtonText = initialData.id ? 'Update Meal' : 'Create Meal';
 
   return (
-    <>
-      {/* Blurred background overlay */}
-      <div 
-        className={`fixed inset-0 z-40 backdrop-blur-sm transition-opacity duration-300 ${showModal ? 'opacity-100' : 'opacity-0'}`}
-        onClick={handleClose}
-      />
-      
-      {/* Modal container */}
-      <div className={`fixed inset-0 z-50 overflow-y-auto transition-opacity duration-300 ${showModal ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          {/* This element is to trick the browser into centering the modal contents */}
-          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-black bg-opacity-40 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-lg mx-auto backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 lg:p-10 transform scale-95 animate-scale-in">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+          title="Close"
+        >
+          <XMarkIcon className="h-6 w-6" />
+        </button>
 
-          {/* Modal panel */}
-          <div className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full ${showModal ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {initialData ? 'Edit Meal' : 'Add New Meal'}
-                </h3>
-                <button
-                  type="button"
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                  onClick={handleClose}
-                >
-                  <span className="h-6 w-6 text-2xl block">×</span>
-                </button>
-              </div>
+        <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-6">
+          {formTitle}
+        </h2>
 
-              {error && (
-                <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-                {/* Form fields remain the same as before */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Meal Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    id="description"
-                    rows={3}
-                    required
-                    value={formData.description}
-                    onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                    Price (KES)
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    id="price"
-                    min="0"
-                    step="0.01"
-                    required
-                    value={formData.price}
-                    onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  />
-                </div>
-
-                <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full cursor-pointer inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm"
-                  >
-                    {loading ? 'Saving...' : (initialData ? 'Update Meal' : 'Add Meal')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={handleClose}
-                    className="mt-3 w-full cursor-pointer inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
+        {errors.general && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4 flex items-center">
+            <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-red-500" />
+            <span className="block sm:inline">{errors.general}</span>
           </div>
-        </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Meal Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`mt-1 block w-full px-4 py-2 bg-white/80 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200 ${errors.name ? 'border-red-500' : ''}`}
+              placeholder="e.g., Chicken Stir-fry"
+              required
+            />
+            {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="3"
+              className={`mt-1 block w-full px-4 py-2 bg-white/80 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200 ${errors.description ? 'border-red-500' : ''}`}
+              placeholder="A delicious and healthy meal with..."
+              required
+            ></textarea>
+            {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+              Price (KSh)
+            </label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              step="0.01"
+              min="0"
+              className={`mt-1 block w-full px-4 py-2 bg-white/80 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200 ${errors.price ? 'border-red-500' : ''}`}
+              placeholder="e.g., 550.00"
+              required
+            />
+            {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
+          </div>
+
+          {/* Availability Toggle (if applicable - assuming default is active if not provided) */}
+          {initialData.hasOwnProperty('is_active') && (
+            <div className="flex items-center justify-between py-2">
+              <span className="block text-sm font-medium text-gray-700">
+                Available for Order
+              </span>
+              <label htmlFor="is_active" className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  name="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+              </label>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-all duration-200"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-md text-white
+                         bg-gradient-to-r from-orange-500 to-green-500 hover:from-orange-600 hover:to-green-600
+                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : submitButtonText}
+            </button>
+          </div>
+        </form>
       </div>
-    </>
+
+      {/* Animations - include in a global CSS file or within a <style jsx> block */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-in {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        .animate-scale-in {
+          animation: scale-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+      `}</style>
+    </div>
   );
 };
 

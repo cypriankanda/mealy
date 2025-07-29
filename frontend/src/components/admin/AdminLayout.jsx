@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom' // Import useNavigate
 import { useAuth } from '../../context/AuthContext'
 import { HomeIcon, ShoppingBagIcon, BeakerIcon, UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
@@ -6,12 +6,24 @@ import { useState, useEffect } from 'react'
 const AdminLayout = () => {
   const { user, logout } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate() // Initialize useNavigate hook
   const [isLoaded, setIsLoaded] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showGoodbyeEffect, setShowGoodbyeEffect] = useState(false) // New state for goodbye effect
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // Keep this if you plan to implement a mobile menu toggle
 
   useEffect(() => {
     setIsLoaded(true)
   }, [])
+
+  const handleLogout = () => {
+    setShowGoodbyeEffect(true); // Trigger the goodbye effect
+    setTimeout(() => {
+      logout(); // Perform the actual logout after a delay
+      // Optionally, navigate to a login or home page if logout doesn't already do it
+      // navigate('/login'); 
+      setShowGoodbyeEffect(false); // Reset state
+    }, 1500); // Adjust delay (in milliseconds) to match animation duration
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: HomeIcon, gradient: 'from-orange-400 to-pink-400' },
@@ -102,8 +114,9 @@ const AdminLayout = () => {
                     </div>
                   </div>
                   
+                  {/* Call the new handler */}
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="mt-3 w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 hover:text-red-600 rounded-xl hover:bg-red-50/50 backdrop-blur-sm transition-all duration-300 group"
                   >
                     <div className="mr-3 p-2 rounded-lg bg-gray-100/50 group-hover:bg-red-100/50 transition-all duration-300">
@@ -134,8 +147,9 @@ const AdminLayout = () => {
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                   </div>
+                  {/* Call the new handler */}
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50/50 transition-all duration-300"
                   >
                     <ArrowRightOnRectangleIcon className="w-5 h-5" />
@@ -185,6 +199,24 @@ const AdminLayout = () => {
         </div>
       </div>
 
+      {/* Goodbye Effect Overlay */}
+      {showGoodbyeEffect && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-orange-500/90 via-pink-500/90 to-blue-500/90 text-white animate-fade-out-zoom">
+          <div className="text-center p-6 sm:p-8">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 animate-slide-up-text">
+              Goodbye, Admin!
+            </h2>
+            <p className="text-lg sm:text-xl md:text-2xl font-medium animate-fade-in" style={{ animationDelay: '0.5s' }}>
+              We hope to see you again soon.
+            </p>
+            <div className="mt-8">
+              <ArrowRightOnRectangleIcon className="w-16 h-16 sm:w-20 sm:h-20 mx-auto animate-float" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tailwind CSS Animations */}
       <style jsx>{`
         @keyframes blob {
           0%, 100% {
@@ -217,6 +249,32 @@ const AdminLayout = () => {
             transform: translateY(0);
           }
         }
+
+        @keyframes fade-out-zoom {
+          0% {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.1);
+          }
+        }
+
+        @keyframes slide-up-text {
+          0% {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
         
         .animate-blob {
           animation: blob 7s infinite;
@@ -228,6 +286,14 @@ const AdminLayout = () => {
         
         .animate-fade-in-up {
           animation: fade-in-up 0.6s ease-out;
+        }
+
+        .animate-fade-out-zoom {
+          animation: fade-out-zoom 1.5s ease-out forwards; /* Matches the setTimeout duration */
+        }
+
+        .animate-slide-up-text {
+          animation: slide-up-text 0.8s ease-out forwards;
         }
         
         .animation-delay-2000 {
