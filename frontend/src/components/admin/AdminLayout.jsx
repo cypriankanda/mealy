@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom' // Import useNavigate
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { HomeIcon, ShoppingBagIcon, BeakerIcon, UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
@@ -6,23 +6,21 @@ import { useState, useEffect } from 'react'
 const AdminLayout = () => {
   const { user, logout } = useAuth()
   const location = useLocation()
-  const navigate = useNavigate() // Initialize useNavigate hook
+  const navigate = useNavigate()
   const [isLoaded, setIsLoaded] = useState(false)
-  const [showGoodbyeEffect, setShowGoodbyeEffect] = useState(false) // New state for goodbye effect
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // Keep this if you plan to implement a mobile menu toggle
+  const [showGoodbyeEffect, setShowGoodbyeEffect] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     setIsLoaded(true)
   }, [])
 
   const handleLogout = () => {
-    setShowGoodbyeEffect(true); // Trigger the goodbye effect
+    setShowGoodbyeEffect(true);
     setTimeout(() => {
-      logout(); // Perform the actual logout after a delay
-      // Optionally, navigate to a login or home page if logout doesn't already do it
-      // navigate('/login'); 
-      setShowGoodbyeEffect(false); // Reset state
-    }, 1500); // Adjust delay (in milliseconds) to match animation duration
+      logout();
+      setShowGoodbyeEffect(false);
+    }, 1500);
   };
 
   const navItems = [
@@ -42,13 +40,13 @@ const AdminLayout = () => {
       </div>
 
       <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition-all duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="flex">
-          {/* Desktop Sidebar */}
+        <div className="flex h-screen overflow-hidden">
+          {/* Desktop Sidebar - Fixed and constrained to viewport height */}
           <div className="hidden md:flex md:flex-shrink-0">
-            <div className="flex flex-col w-64 border-r border-white/20 backdrop-blur-lg bg-white/70 shadow-2xl">
-              <div className="h-0 flex-1 flex flex-col pt-6 pb-4 overflow-y-auto">
+            <div className="flex flex-col w-64 border-r border-white/20 backdrop-blur-lg bg-white/70 shadow-2xl h-screen sticky top-0">
+              <div className="flex flex-col h-full">
                 {/* Brand Header */}
-                <div className="flex items-center flex-shrink-0 px-6 mb-8">
+                <div className="flex items-center flex-shrink-0 px-6 py-6">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-xl flex items-center justify-center shadow-lg animate-float">
                       <BeakerIcon className="w-6 h-6 text-white" />
@@ -59,8 +57,8 @@ const AdminLayout = () => {
                   </div>
                 </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 px-4 space-y-2">
+                {/* Navigation - Scrollable if content exceeds viewport */}
+                <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
                   {navItems.map((item, index) => {
                     const isActive = location.pathname === item.path
                     return (
@@ -98,8 +96,8 @@ const AdminLayout = () => {
                   })}
                 </nav>
 
-                {/* User Profile Section */}
-                <div className="px-4 py-4 border-t border-white/20">
+                {/* User Profile Section - Fixed at bottom */}
+                <div className="px-4 py-4 border-t border-white/20 mt-auto">
                   <div className="flex items-center space-x-3 p-3 rounded-xl bg-white/30 backdrop-blur-sm border border-white/20">
                     <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold shadow-lg">
                       {user?.email?.charAt(0).toUpperCase() || 'U'}
@@ -114,7 +112,6 @@ const AdminLayout = () => {
                     </div>
                   </div>
                   
-                  {/* Call the new handler */}
                   <button
                     onClick={handleLogout}
                     className="mt-3 w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 hover:text-red-600 rounded-xl hover:bg-red-50/50 backdrop-blur-sm transition-all duration-300 group"
@@ -129,7 +126,7 @@ const AdminLayout = () => {
             </div>
           </div>
 
-          {/* Main Content Area */}
+          {/* Main Content Area - Scrollable */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Mobile Header */}
             <div className="md:hidden backdrop-blur-lg bg-white/70 shadow-lg border-b border-white/20">
@@ -147,7 +144,6 @@ const AdminLayout = () => {
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  {/* Call the new handler */}
                   <button
                     onClick={handleLogout}
                     className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50/50 transition-all duration-300"
@@ -187,7 +183,7 @@ const AdminLayout = () => {
               </div>
             </div>
 
-            {/* Content Area */}
+            {/* Content Area - Scrollable */}
             <div className="flex-1 overflow-auto focus:outline-none">
               <div className="p-6 md:p-8">
                 <div className="animate-fade-in-up">
@@ -289,7 +285,7 @@ const AdminLayout = () => {
         }
 
         .animate-fade-out-zoom {
-          animation: fade-out-zoom 1.5s ease-out forwards; /* Matches the setTimeout duration */
+          animation: fade-out-zoom 1.5s ease-out forwards;
         }
 
         .animate-slide-up-text {

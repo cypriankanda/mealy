@@ -251,7 +251,7 @@ const MealItem = ({ meal, onEdit, onDelete, delay }) => {
       </div>
       
       {/* Availability Status Pill */}
-      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+      {/* <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
         {meal.is_active === false ? (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
             <XCircleIcon className="h-4 w-4 mr-1" /> Unavailable
@@ -261,7 +261,7 @@ const MealItem = ({ meal, onEdit, onDelete, delay }) => {
             <CheckCircleIcon className="h-4 w-4 mr-1" /> Available
           </span>
         )}
-      </div>
+      </div> */}
     </div>
   )
 }
