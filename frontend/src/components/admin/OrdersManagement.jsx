@@ -33,7 +33,7 @@ const OrdersManagement = () => {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await api.put(`/admin/orders/${orderId}/status`, { status: newStatus });
-      setOrders(prevOrders =>
+      setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.order_id === orderId ? { ...order, status: newStatus } : order
         )
@@ -70,7 +70,8 @@ const OrdersManagement = () => {
   const calculateTodaysRevenue = () => {
     return deliveredOrders
       .filter(
-        (o) => new Date(o.created_at).toDateString() === new Date().toDateString()
+        (o) =>
+          new Date(o.created_at).toDateString() === new Date().toDateString()
       )
       .reduce((sum, o) => sum + o.price, 0);
   };
@@ -134,46 +135,34 @@ const OrdersManagement = () => {
 
         <div className="mb-4 border-b border-gray-200">
           <nav className="-mb-px flex space-x-4 overflow-x-auto">
-            <button
+            <TabButton
+              active={activeTab === "all"}
               onClick={() => setActiveTab("all")}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "all"
-                  ? "border-primary-500 text-orange-500"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+              count={orders.length}
             >
               All Orders
-            </button>
-            <button
+            </TabButton>
+            <TabButton
+              active={activeTab === "pending"}
               onClick={() => setActiveTab("pending")}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "pending"
-                  ? "border-primary-500 text-orange-500"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+              count={pendingOrders.length}
             >
               Pending Orders
-            </button>
-            <button
+            </TabButton>
+            <TabButton
+              active={activeTab === "delivered"}
               onClick={() => setActiveTab("delivered")}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "delivered"
-                  ? "border-primary-500 text-orange-500"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+              count={deliveredOrders.length}
             >
               Delivered Orders
-            </button>
-            <button
+            </TabButton>
+            <TabButton
+              active={activeTab === "cancelled"}
               onClick={() => setActiveTab("cancelled")}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "cancelled"
-                  ? "border-primary-500 text-orange-500"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+              count={cancelledOrders.length}
             >
               Cancelled Orders
-            </button>
+            </TabButton>
           </nav>
         </div>
 
@@ -215,6 +204,26 @@ const OrdersManagement = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const TabButton = ({ children, active, onClick, count }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+        active
+          ? "border-primary-500 text-orange-500"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+      }`}
+    >
+      {children}
+      {count > 0 && (
+        <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-orange-500 rounded-full">
+          {count}
+        </span>
+      )}
+    </button>
   );
 };
 
