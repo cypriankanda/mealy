@@ -73,7 +73,7 @@ npm run dev
 Local frontend will be accessible at:
 
 ```bash
-http://localhost:5173/
+https://mealy-xi.vercel.app/
 ```
 
 ---
