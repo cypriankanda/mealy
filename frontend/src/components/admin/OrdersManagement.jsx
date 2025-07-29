@@ -45,53 +45,67 @@ const OrdersManagement = () => {
     }
   };
 
-  const calculateTodaysRevenue = () => {
-    return orders
-      .filter(
-        (o) =>
-          new Date(o.created_at).toDateString() === new Date().toDateString() &&
-          o.status === "delivered" // Only count delivered orders for today's revenue
-      )
-      .reduce((sum, o) => sum + o.price, 0);
+  const calculateTodaysOrders = () => {
+    const today = new Date();
+    return orders.filter(
+      (o) => new Date(o.created_at).toDateString() === today.toDateString()
+    ).length;
   };
 
-  // const calculateTotalRevenue = () => {
-  //   return orders
-  //     .filter((o) => o.status === "delivered") // Only count delivered orders for total revenue
-  //     .reduce((sum, o) => sum + o.price, 0);
-  // };
-
-  const calculateTodaysOrders = () => {
+  const calculateTodaysCompletedOrders = () => {
+    const today = new Date();
     return orders.filter(
       (o) =>
-        new Date(o.created_at).toDateString() === new Date().toDateString() &&
-        o.status === "delivered" // Only count delivered orders for today's count
+        new Date(o.created_at).toDateString() === today.toDateString() &&
+        o.status === "delivered"
     ).length;
   };
 
   const calculateTodaysCancelledOrders = () => {
+    const today = new Date();
     return orders.filter(
       (o) =>
-        new Date(o.created_at).toDateString() === new Date().toDateString() &&
+        new Date(o.created_at).toDateString() === today.toDateString() &&
         o.status === "cancelled"
     ).length;
   };
 
   const getFilteredOrders = () => {
-    if (activeTab === "pending") {
-      return orders.filter((order) =>
-        ["confirmed", "preparing", "ready"].includes(order.status)
-      );
-    } else if (activeTab === "cancelled") {
-      return orders.filter((order) => order.status === "cancelled");
+    switch (activeTab) {
+      case "pending":
+        return orders.filter((order) =>
+          ["confirmed", "preparing", "ready"].includes(order.status)
+        );
+      case "delivered":
+        return orders.filter((order) => order.status === "delivered");
+      case "cancelled":
+        return orders.filter((order) => order.status === "cancelled");
+      default:
+        return orders;
     }
-    return orders;
+  };
+
+  const getTabCount = (tab) => {
+    switch (tab) {
+      case "pending":
+        return orders.filter((order) =>
+          ["confirmed", "preparing", "ready"].includes(order.status)
+        ).length;
+      case "delivered":
+        return orders.filter((order) => order.status === "delivered").length;
+      case "cancelled":
+        return orders.filter((order) => order.status === "cancelled").length;
+      default:
+        return orders.length;
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
-        {/* Loading animation remains the same */}
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        </div>
       </div>
     );
   }
@@ -100,9 +114,7 @@ const OrdersManagement = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
-      {/* Background elements remain the same */}
       <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in">
-        {/* Header Section */}
         <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8">
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Orders Management
@@ -112,7 +124,6 @@ const OrdersManagement = () => {
           </p>
         </div>
 
-        {/* Stat Cards Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <StatCard
             title="Today's Orders"
@@ -120,6 +131,13 @@ const OrdersManagement = () => {
             icon={<ShoppingBagIcon className="h-7 w-7" />}
             gradient="from-orange-400 to-orange-600"
             delay="0"
+          />
+          <StatCard
+            title="Completed Today"
+            value={calculateTodaysCompletedOrders()}
+            icon={<CheckCircleIcon className="h-7 w-7" />}
+            gradient="from-green-400 to-green-600"
+            delay="100"
           />
           <StatCard
             title="Pending Orders"
@@ -130,13 +148,6 @@ const OrdersManagement = () => {
             }
             icon={<ClockIcon className="h-7 w-7" />}
             gradient="from-yellow-400 to-yellow-600"
-            delay="100"
-          />
-          <StatCard
-            title="Today's Revenue"
-            value={`KSh ${calculateTodaysRevenue().toLocaleString("en-KE")}`}
-            icon={<CurrencyDollarIcon className="h-7 w-7" />}
-            gradient="from-green-400 to-green-600"
             delay="200"
           />
           <StatCard
@@ -148,30 +159,35 @@ const OrdersManagement = () => {
           />
         </div>
 
-        {/* Tabs and Order List */}
         <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-4 sm:p-6 animate-slide-up" style={{ animationDelay: '400ms' }}>
           <div className="mb-4 border-b border-gray-200">
             <nav className="-mb-px flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-2">
               <TabButton
-                label="Pending Orders"
+                label={`All Orders (${getTabCount("all")})`}
+                isActive={activeTab === "all"}
+                onClick={() => setActiveTab("all")}
+              />
+              <TabButton
+                label={`Pending (${getTabCount("pending")})`}
                 isActive={activeTab === "pending"}
                 onClick={() => setActiveTab("pending")}
               />
               <TabButton
-                label="Cancelled Orders"
-                isActive={activeTab === "cancelled"}
-                onClick={() => setActiveTab("cancelled")}
+                label={`Delivered (${getTabCount("delivered")})`}
+                isActive={activeTab === "delivered"}
+                onClick={() => setActiveTab("delivered")}
               />
               <TabButton
-                label="All Orders"
-                isActive={activeTab === "all"}
-                onClick={() => setActiveTab("all")}
+                label={`Cancelled (${getTabCount("cancelled")})`}
+                isActive={activeTab === "cancelled"}
+                onClick={() => setActiveTab("cancelled")}
               />
             </nav>
           </div>
 
           <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4">
-            {activeTab === "pending" ? "Active Orders" : 
+            {activeTab === "pending" ? "Pending Orders" : 
+             activeTab === "delivered" ? "Delivered Orders" :
              activeTab === "cancelled" ? "Cancelled Orders" : "All Customer Orders"}
           </h2>
 
@@ -179,7 +195,11 @@ const OrdersManagement = () => {
             {displayedOrders.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBagIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-500 mb-2">No {activeTab === "pending" ? "pending" : activeTab === "cancelled" ? "cancelled" : ""} orders found</h3>
+                <h3 className="text-lg font-medium text-gray-500 mb-2">
+                  No {activeTab === "pending" ? "pending" : 
+                      activeTab === "delivered" ? "delivered" : 
+                      activeTab === "cancelled" ? "cancelled" : ""} orders found
+                </h3>
                 <p className="text-gray-400">Looks like it's quiet here. Check back later!</p>
               </div>
             ) : (
@@ -198,7 +218,6 @@ const OrdersManagement = () => {
         </div>
       </div>
 
-      {/* Tailwind CSS Animations (copy from dashboard or define in a global CSS file) */}
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -233,7 +252,6 @@ const OrdersManagement = () => {
   );
 };
 
-// Reusable StatCard component (copied from dashboard for consistency)
 const StatCard = ({ title, value, icon, gradient, delay }) => {
   return (
     <div
@@ -256,7 +274,6 @@ const StatCard = ({ title, value, icon, gradient, delay }) => {
   );
 };
 
-// Reusable TabButton component for cleaner tab navigation
 const TabButton = ({ label, isActive, onClick }) => (
   <button
     onClick={onClick}
@@ -270,7 +287,6 @@ const TabButton = ({ label, isActive, onClick }) => (
   </button>
 );
 
-// OrderCard component with improved styling and responsiveness
 const OrderCard = ({ order, onStatusUpdate, delay }) => {
   const getStatusPillConfig = (status) => {
     const configs = {
@@ -290,12 +306,12 @@ const OrderCard = ({ order, onStatusUpdate, delay }) => {
         gradient: "from-yellow-400 to-yellow-600",
         icon: <CogIcon className="h-4 w-4 animate-spin" />
       },
-      confirmed: { // Renamed from 'pending' to 'confirmed' for consistency
+      confirmed: {
         gradient: "from-orange-400 to-orange-600",
         icon: <ClockIcon className="h-4 w-4" />
       }
     };
-    return configs[status] || configs.confirmed; // Default to confirmed
+    return configs[status] || configs.confirmed;
   };
 
   const statusPillConfig = getStatusPillConfig(order.status);
@@ -317,11 +333,10 @@ const OrderCard = ({ order, onStatusUpdate, delay }) => {
 
   return (
     <div
-      className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-xl rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300 animate-slide-up"
+      className={`backdrop-blur-lg bg-white/70 border border-white/20 shadow-xl rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300 animate-slide-up`}
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex justify-between items-start mb-3">
-        {/* Status Pill */}
         <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white shadow-md bg-gradient-to-r ${statusPillConfig.gradient}`}>
           {statusPillConfig.icon}
           <span className="ml-1 capitalize">{order.status}</span>

@@ -21,10 +21,10 @@ const Dashboard = () => {
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [monthlyOrders, setMonthlyOrders] = useState(0);
-  const [monthlyRevenue, setMonthlyRevenue] = useState(0); // Added monthly revenue state
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [popularMeal, setPopularMeal] = useState(null);
   const [cancelledOrdersCount, setCancelledOrdersCount] = useState(0);
-  const [completedOrdersCount, setCompletedOrdersCount] = useState(0); // Added completed orders state
+  const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,11 +33,9 @@ const Dashboard = () => {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        // Get all orders first
         const allOrdersResponse = await api.get("/admin/orders");
         const allOrders = allOrdersResponse.data.data;
 
-        // Filter orders for today and yesterday
         const todayOrders = allOrders.filter(
           (order) =>
             new Date(order.created_at).toDateString() === today.toDateString()
@@ -48,7 +46,6 @@ const Dashboard = () => {
             yesterday.toDateString()
         );
 
-        // Calculate today's stats
         const todayCompletedOrders = todayOrders.filter(
           (order) => order.status === "delivered"
         );
@@ -57,12 +54,11 @@ const Dashboard = () => {
         );
 
         const todayStats = {
-          total_orders: todayCompletedOrders.length, // Only count delivered orders
+          total_orders: todayCompletedOrders.length,
           total_revenue: todayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
           cancelled_orders: todayCancelledOrders.length,
         };
 
-        // Calculate yesterday's stats
         const yesterdayCompletedOrders = yesterdayOrders.filter(
           (order) => order.status === "delivered"
         );
@@ -71,15 +67,13 @@ const Dashboard = () => {
         );
 
         const yesterdayStats = {
-          total_orders: yesterdayCompletedOrders.length, // Only count delivered orders
+          total_orders: yesterdayCompletedOrders.length,
           total_revenue: yesterdayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
           cancelled_orders: yesterdayCancelledOrders.length,
         };
 
-        // Get recent orders
         const recentOrdersResponse = await api.get("/admin/orders?per_page=5");
 
-        // Calculate monthly orders and revenue
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
         const monthlyData = allOrders.filter((order) => {
@@ -87,7 +81,7 @@ const Dashboard = () => {
           return (
             orderDate.getMonth() === currentMonth &&
             orderDate.getFullYear() === currentYear &&
-            order.status === "delivered" // Only count delivered orders for monthly stats
+            order.status === "delivered"
           );
         });
         
@@ -102,7 +96,6 @@ const Dashboard = () => {
         setMonthlyOrders(monthlyCount);
         setMonthlyRevenue(monthlyRev);
 
-        // Calculate most popular meal of the week (only delivered orders)
         const startOfWeek = new Date();
         startOfWeek.setDate(today.getDate() - today.getDay());
         startOfWeek.setHours(0, 0, 0, 0);
@@ -112,19 +105,16 @@ const Dashboard = () => {
         endOfWeek.setHours(23, 59, 59, 999);
 
         const weeklyMealCounts = {};
-        const weeklyMealRevenue = {};
 
         allOrders.forEach((order) => {
           const orderDate = new Date(order.created_at);
           if (
             orderDate >= startOfWeek &&
             orderDate <= endOfWeek &&
-            order.status === "delivered" // Only count delivered orders for popularity
+            order.status === "delivered"
           ) {
             weeklyMealCounts[order.meal_name] =
               (weeklyMealCounts[order.meal_name] || 0) + 1;
-            weeklyMealRevenue[order.meal_name] =
-              (weeklyMealRevenue[order.meal_name] || 0) + order.price;
           }
         });
 
@@ -134,7 +124,6 @@ const Dashboard = () => {
             mostPopularWeekly = {
               name,
               count,
-              total_revenue: weeklyMealRevenue[name],
             };
           }
         });
@@ -143,8 +132,6 @@ const Dashboard = () => {
           setPopularMeal({
             name: mostPopularWeekly.name,
             order_count: mostPopularWeekly.count,
-            average_price:
-              mostPopularWeekly.total_revenue / mostPopularWeekly.count,
           });
         } else {
           setPopularMeal(null);
@@ -159,7 +146,6 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  // Calculate comparison with yesterday
   const getComparisonText = (
     todayValue,
     yesterdayValue,
@@ -204,12 +190,10 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
-        {/* Animated Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
           <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
           <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
-          {/* Added more background elements for subtle motion */}
           <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '6s'}}></div>
           <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '8s'}}></div>
         </div>
@@ -232,18 +216,15 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
-      {/* Animated Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
         <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
-        {/* Added more background elements for subtle motion */}
         <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '6s'}}></div>
         <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '8s'}}></div>
       </div>
 
       <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in">
-        {/* Enhanced Header */}
         <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
             <div className="flex items-center space-x-4 mb-4 sm:mb-0">
@@ -273,7 +254,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <StatCard
             title="Today's Orders"
@@ -294,26 +274,24 @@ const Dashboard = () => {
             delay="100"
           />
           <StatCard
-            title="Monthly Revenue"
-            value={`KSh ${monthlyRevenue?.toLocaleString("en-KE") || 0}`}
+            title="Monthly Orders"
+            value={monthlyOrders || 0}
             change="This month"
-            icon={<CurrencyDollarIcon className="h-7 w-7" />}
+            icon={<ShoppingBagIcon className="h-7 w-7" />}
             gradient="from-blue-400 to-blue-600"
             delay="200"
           />
           <StatCard
-            title="Cancelled Today"
-            value={cancelledOrdersCount}
-            change={cancelledComparison.text}
-            isIncrease={cancelledComparison.isIncrease}
-            icon={<XCircleIcon className="h-7 w-7" />}
-            gradient="from-red-400 to-red-600"
+            title="Monthly Revenue"
+            value={`KSh ${monthlyRevenue?.toLocaleString("en-KE") || 0}`}
+            change="This month"
+            icon={<CurrencyDollarIcon className="h-7 w-7" />}
+            gradient="from-purple-400 to-purple-600"
             delay="300"
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Enhanced Recent Orders */}
           <div className="lg:col-span-2">
             <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '400ms'}}>
               <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6">
@@ -372,19 +350,17 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Enhanced Sidebar */}
           <div className="space-y-6">
-            {/* Today's Summary */}
             <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '600ms'}}>
               <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6">
                 Today's Summary
               </h2>
               <div className="space-y-4">
                 <SummaryItem
-                  icon={<ShoppingBagIcon className="h-5 w-5" />}
+                  icon={<CheckCircleIcon className="h-5 w-5" />}
                   label="Orders Completed"
                   value={completedOrdersCount || 0}
-                  gradient="from-orange-400 to-orange-600"
+                  gradient="from-green-400 to-green-600"
                 />
                 <SummaryItem
                   icon={<CurrencyDollarIcon className="h-5 w-5" />}
@@ -402,7 +378,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Popular Meal */}
             <div className="backdrop-blur-lg bg-gradient-to-br from-purple-100/70 to-pink-100/70 border border-purple-200/30 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '700ms'}}>
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 sm:mb-6">
                 🏆 Popular Meal This Week
@@ -423,12 +398,6 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Orders:</span>
                         <span className="font-medium text-gray-900">{popularMeal.order_count}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Avg. Price:</span>
-                        <span className="font-medium text-gray-900 bg-gradient-to-r from-purple-100 to-pink-100 px-2 py-1 rounded-lg">
-                          KSh {popularMeal.average_price?.toFixed(0) || "0"}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -475,7 +444,6 @@ const Dashboard = () => {
           animation: slide-up 0.6s ease-out forwards;
         }
 
-        /* Custom Scrollbar for Recent Orders Table */
         .custom-scrollbar {
           -webkit-overflow-scrolling: touch;
         }

@@ -66,16 +66,16 @@ const MealsManagement = () => {
   if (loading) {
     return (
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
-        {/* Loading animation remains the same */}
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
-      {/* Background elements remain the same */}
       <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in">
-        {/* Header Section */}
         <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8">
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Meal Management
@@ -85,7 +85,6 @@ const MealsManagement = () => {
           </p>
         </div>
         
-        {/* Add Meal Button */}
         <div className="flex justify-end animate-slide-up" style={{ animationDelay: '400ms' }}>
           <button
             onClick={() => {
@@ -101,7 +100,6 @@ const MealsManagement = () => {
           </button>
         </div>
         
-        {/* Meals List */}
         <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-4 sm:p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
           <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-6">
             Your Meal Offerings
@@ -132,7 +130,6 @@ const MealsManagement = () => {
         </div>
       </div>
       
-      {/* MealForm Modal */}
       <MealForm 
         isOpen={isFormOpen}
         onClose={() => {
@@ -145,8 +142,6 @@ const MealsManagement = () => {
         }
         initialData={editingMeal || { name: '', description: '', price: '', is_active: true }}
       />
-
-      {/* Animations remain the same */}
     </div>
   )
 }
@@ -187,7 +182,6 @@ const MealItem = ({ meal, onEdit, onDelete, delay }) => {
         </div>
       </div>
       
-      {/* Availability Status Pill */}
       <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
         {meal.is_active === false ? (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">

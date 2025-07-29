@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'; // Changed XIcon to XMarkIcon for newer Heroicons
+import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState(initialData);
@@ -8,7 +8,7 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
 
   useEffect(() => {
     setFormData(initialData);
-    setErrors({}); // Clear errors when form opens or initialData changes
+    setErrors({});
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
@@ -17,9 +17,8 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === 'price' ? parseFloat(value) || '' : value, // Convert price to float
+      [name]: name === 'price' ? parseFloat(value) || '' : value,
     }));
-    // Clear error for the field being changed
     if (errors[name]) {
       setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
     }
@@ -49,13 +48,11 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
-      // Form closes on successful submission, handled by parent
     } catch (err) {
       console.error('Submission error:', err);
-      // Display a general error or specific field error if returned by onSubmit
       setErrors((prevErrors) => ({
         ...prevErrors,
-        general: err, // Assuming err can be a string or object with a message
+        general: err,
       }));
     } finally {
       setIsSubmitting(false);
@@ -66,8 +63,8 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
   const submitButtonText = initialData.id ? 'Update Meal' : 'Create Meal';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-black bg-opacity-40 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg mx-auto backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 lg:p-10 transform scale-95 animate-scale-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-black/10 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-lg mx-auto backdrop-blur-lg bg-white/90 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 lg:p-10 transform scale-95 animate-scale-in">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
@@ -141,7 +138,6 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
             {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
           </div>
 
-          {/* Availability Toggle (if applicable - assuming default is active if not provided) */}
           {initialData.hasOwnProperty('is_active') && (
             <div className="flex items-center justify-between py-2">
               <span className="block text-sm font-medium text-gray-700">
@@ -184,7 +180,6 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
         </form>
       </div>
 
-      {/* Animations - include in a global CSS file or within a <style jsx> block */}
       <style jsx>{`
         @keyframes fade-in {
           from { opacity: 0; }
