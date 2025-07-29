@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
-import { PlusIcon, PencilIcon, TrashIcon, XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, PencilIcon, TrashIcon, XCircleIcon, CheckCircleIcon, ShoppingBagIcon } from '@heroicons/react/24/outline'
 import MealForm from './MealForm'
 
 const MealsManagement = () => {
