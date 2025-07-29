@@ -89,10 +89,13 @@ const Dashboard = () => {
         setMonthlyOrders(monthlyCount);
 
         // Calculate most popular meal of the week
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        const endOfWeek = new Date(today);
-        endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
+        const startOfWeek = new Date(); // Start from today
+        startOfWeek.setDate(today.getDate() - today.getDay()); // Go back to Sunday (0-6 for Sun-Sat)
+        startOfWeek.setHours(0, 0, 0, 0); // Set to start of the day
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week is 6 days after start of week
+        endOfWeek.setHours(23, 59, 59, 999); // Set to end of the day
 
         const weeklyMealCounts = {};
         const weeklyMealRevenue = {};
@@ -192,6 +195,9 @@ const Dashboard = () => {
           <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
           <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
           <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+          {/* Added more background elements for subtle motion */}
+          <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '6s'}}></div>
+          <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '8s'}}></div>
         </div>
         
         <div className="flex justify-center items-center h-screen relative z-10">
@@ -217,22 +223,25 @@ const Dashboard = () => {
         <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
         <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        {/* Added more background elements for subtle motion */}
+        <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '6s'}}></div>
+        <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '8s'}}></div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6 animate-fade-in">
+      <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in"> {/* Adjusted padding for different screen sizes */}
         {/* Enhanced Header */}
-        <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8"> {/* Adjusted padding */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between"> {/* Changed to flex-col for small screens, then row */}
+            <div className="flex items-center space-x-4 mb-4 sm:mb-0"> {/* Added margin-bottom for small screens */}
               <div className="relative">
-                <ChartBarIcon className="h-10 w-10 text-orange-500 animate-float" />
+                <ChartBarIcon className="h-8 w-8 sm:h-10 sm:w-10 text-orange-500 animate-float" /> {/* Adjusted icon size */}
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-green-500 opacity-20 rounded-lg blur-sm"></div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent"> {/* Adjusted font size */}
                   Dashboard
                 </h1>
-                <p className="text-gray-600 mt-1">Overview of your catering business</p>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">Overview of your catering business</p> {/* Adjusted font size */}
               </div>
             </div>
             <div className="hidden md:block">
@@ -251,7 +260,7 @@ const Dashboard = () => {
         </div>
 
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"> {/* Adjusted gap */}
           <StatCard
             title="Today's Orders"
             value={stats?.total_orders || 0}
@@ -289,24 +298,55 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8"> {/* Adjusted gap */}
           {/* Enhanced Recent Orders */}
           <div className="lg:col-span-2">
-            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-8 animate-slide-up" style={{animationDelay: '400ms'}}>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-6">
+            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '400ms'}}> {/* Adjusted padding */}
+              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6"> {/* Adjusted font size and margin */}
                 Recent Orders
               </h2>
               <div className="space-y-4">
                 {recentOrders.length > 0 ? (
-                  recentOrders.map((order, index) => (
-                    <div
-                      key={order.order_id}
-                      className="animate-slide-up hover:scale-[1.02] transition-all duration-300"
-                      style={{animationDelay: `${500 + index * 100}ms`}}
-                    >
-                      <OrderItem order={order} />
+                  <div className="overflow-x-auto custom-scrollbar"> {/* Added custom scrollbar for overflow */}
+                    <div className="inline-block min-w-full align-middle">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Meal
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Customer
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Price
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {recentOrders.map((order, index) => (
+                            <tr key={order.order_id} className="animate-slide-up" style={{animationDelay: `${500 + index * 100}ms`}}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {order.meal_name}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                {order.customer_email}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                                KSh {order.price.toLocaleString("en-KE")}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <OrderStatusPill status={order.status} />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  ))
+                  </div>
                 ) : (
                   <div className="text-center py-12">
                     <ShoppingBagIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -321,8 +361,8 @@ const Dashboard = () => {
           {/* Enhanced Sidebar */}
           <div className="space-y-6">
             {/* Today's Summary */}
-            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-8 animate-slide-up" style={{animationDelay: '600ms'}}>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-6">
+            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '600ms'}}> {/* Adjusted padding */}
+              <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6"> {/* Adjusted margin */}
                 Today's Summary
               </h2>
               <div className="space-y-4">
@@ -342,15 +382,15 @@ const Dashboard = () => {
                   icon={<XCircleIcon className="h-5 w-5" />}
                   label="Cancelled Orders"
                   value={cancelledOrdersCount || 0}
-                  gradient="from-red-400 to-red-600"
                   subtitle={cancelledComparison.text}
+                  gradient="from-red-400 to-red-600"
                 />
               </div>
             </div>
 
             {/* Popular Meal */}
-            <div className="backdrop-blur-lg bg-gradient-to-br from-purple-100/70 to-pink-100/70 border border-purple-200/30 shadow-2xl rounded-3xl p-8 animate-slide-up" style={{animationDelay: '700ms'}}>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+            <div className="backdrop-blur-lg bg-gradient-to-br from-purple-100/70 to-pink-100/70 border border-purple-200/30 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '700ms'}}> {/* Adjusted padding */}
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 sm:mb-6"> {/* Adjusted margin */}
                 🏆 Popular Meal This Week
               </h2>
               {popularMeal ? (
@@ -420,6 +460,30 @@ const Dashboard = () => {
           opacity: 0;
           animation: slide-up 0.6s ease-out forwards;
         }
+
+        /* Custom Scrollbar for Recent Orders Table */
+        .custom-scrollbar {
+          -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 8px;
+          border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
       `}</style>
     </div>
   );
@@ -428,11 +492,11 @@ const Dashboard = () => {
 const StatCard = ({ title, value, change, isIncrease, icon, gradient, delay }) => {
   return (
     <div 
-      className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 animate-slide-up group"
+      className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-5 sm:p-6 hover:scale-105 hover:shadow-3xl transition-all duration-300 animate-slide-up group" 
       style={{animationDelay: `${delay}ms`}}
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className={`rounded-2xl p-4 bg-gradient-to-r ${gradient} shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
+      <div className="flex items-center justify-between mb-3 sm:mb-4"> 
+        <div className={`rounded-2xl p-3 sm:p-4 bg-gradient-to-r ${gradient} shadow-lg group-hover:shadow-xl transition-shadow duration-300`}> 
           <div className="text-white">
             {icon}
           </div>
@@ -441,15 +505,15 @@ const StatCard = ({ title, value, change, isIncrease, icon, gradient, delay }) =
       
       <div>
         <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-        <p className="text-3xl font-bold text-gray-900 mb-2">{value}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{value}</p> 
         {change && (
-          <div className="flex items-center text-sm">
+          <div className="flex items-center text-xs sm:text-sm"> 
             {isIncrease !== undefined && (
               <>
                 {isIncrease ? (
-                  <ArrowUpIcon className="h-4 w-4 text-green-500 mr-1" />
+                  <ArrowUpIcon className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1" /> 
                 ) : (
-                  <ArrowDownIcon className="h-4 w-4 text-red-500 mr-1" />
+                  <ArrowDownIcon className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 mr-1" /> 
                 )}
                 <span className={isIncrease ? "text-green-600" : "text-red-600"}>
                   {change}
@@ -468,91 +532,59 @@ const StatCard = ({ title, value, change, isIncrease, icon, gradient, delay }) =
 
 const SummaryItem = ({ icon, label, value, gradient, subtitle }) => {
   return (
-    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-gray-50/50 to-white/50 border border-gray-100/50 hover:shadow-md transition-all duration-300 group">
+    <div className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-gray-50/50 to-white/50 border border-gray-100/50 hover:shadow-md transition-all duration-300 group"> 
       <div className="flex items-center space-x-3">
         <div className={`rounded-xl p-2 bg-gradient-to-r ${gradient} text-white shadow-md group-hover:shadow-lg transition-shadow`}>
           {icon}
         </div>
         <div>
-          <span className="text-gray-700 font-medium">{label}</span>
+          <span className="text-gray-700 font-medium text-sm sm:text-base">{label}</span> 
           {subtitle && (
             <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
           )}
         </div>
       </div>
-      <span className="font-bold text-gray-900 text-lg">{value}</span>
+      <span className="font-bold text-gray-900 text-base sm:text-lg">{value}</span> 
     </div>
   );
 };
 
-const OrderItem = ({ order }) => {
+// Replaced OrderItem with OrderStatusPill for status display within the table
+const OrderStatusPill = ({ status }) => {
   const getStatusConfig = (status) => {
     const configs = {
       delivered: {
         gradient: "from-green-400 to-green-600",
-        bgGradient: "from-green-50 to-green-100",
-        borderColor: "border-green-200",
         icon: <CheckCircleIcon className="h-4 w-4" />
       },
       cancelled: {
         gradient: "from-red-400 to-red-600", 
-        bgGradient: "from-red-50 to-red-100",
-        borderColor: "border-red-200",
         icon: <XCircleIcon className="h-4 w-4" />
       },
       ready: {
         gradient: "from-blue-400 to-blue-600",
-        bgGradient: "from-blue-50 to-blue-100", 
-        borderColor: "border-blue-200",
         icon: <CheckCircleIcon className="h-4 w-4" />
       },
       preparing: {
         gradient: "from-yellow-400 to-yellow-600",
-        bgGradient: "from-yellow-50 to-yellow-100",
-        borderColor: "border-yellow-200", 
         icon: <CogIcon className="h-4 w-4 animate-spin" />
       },
       pending: {
         gradient: "from-orange-400 to-orange-600",
-        bgGradient: "from-orange-50 to-orange-100",
-        borderColor: "border-orange-200",
         icon: <ClockIcon className="h-4 w-4" />
       }
     };
     return configs[status] || configs.pending;
   };
 
-  const statusConfig = getStatusConfig(order.status);
+  const statusConfig = getStatusConfig(status);
 
   return (
-    <div className={`p-6 rounded-2xl bg-gradient-to-r ${statusConfig.bgGradient} border ${statusConfig.borderColor} hover:shadow-lg transition-all duration-300`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className={`inline-flex items-center px-3 py-1.5 rounded-xl text-sm font-medium bg-gradient-to-r ${statusConfig.gradient} text-white shadow-md`}>
-            {statusConfig.icon}
-            <span className="ml-2">
-              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-            </span>
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 text-lg">{order.meal_name}</h3>
-            <p className="text-sm text-gray-600 mt-1">{order.customer_email}</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="font-bold text-gray-900 text-xl">
-            KSh {order.price.toLocaleString("en-KE")}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            {new Date(order.created_at).toLocaleTimeString("en-KE", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-              timeZone: "Africa/Nairobi",
-            })}
-          </p>
-        </div>
-      </div>
+    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${statusConfig.gradient} text-white shadow-md`}>
+      {statusConfig.icon}
+      <span className="ml-1">
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
     </div>
   );
 };
