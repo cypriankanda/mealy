@@ -24,18 +24,18 @@ const Login = () => {
     }
   }
 
-  const handleDemoLogin = async (role) => {
-    const demoCredentials = {
-      admin: { email: 'admin@mealy.co.ke', password: 'demo123' },
-      customer: { email: 'customer@example.com', password: 'demo123' }
-    }
+  // const handleDemoLogin = async (role) => {
+  //   const demoCredentials = {
+  //     admin: { email: 'admin@mealy.co.ke', password: 'demo123' },
+  //     customer: { email: 'customer@example.com', password: 'demo123' }
+  //   }
     
-    try {
-      await login(demoCredentials[role].email, demoCredentials[role].password)
-    } catch {
-      setError('Failed to login with demo account')
-    }
-  }
+  //   try {
+  //     await login(demoCredentials[role].email, demoCredentials[role].password)
+  //   } catch {
+  //     setError('Failed to login with demo account')
+  //   }
+  // }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
