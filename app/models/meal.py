@@ -52,8 +52,12 @@ class Meal(db.Model):
 
             # Convert price to integer, handling both float and string inputs
             try:
-                price = int(float(price))
-            except (ValueError, TypeError):
+                # Handle both float and integer inputs
+                if isinstance(price, (int, float)):
+                    price = int(price)
+                else:
+                    price = int(float(str(price)))
+            except (ValueError, TypeError, AttributeError):
                 return None, "Price must be a valid number"
 
             meal = cls(name=name, description=description, price=price, caterer_id=caterer_id)
@@ -75,8 +79,12 @@ class Meal(db.Model):
                     return False, "Price must be greater than 0"
                 # Convert to integer, handling both float and string inputs
                 try:
-                    self.price = int(float(price))
-                except (ValueError, TypeError):
+                    # Handle both float and integer inputs
+                    if isinstance(price, (int, float)):
+                        self.price = int(price)
+                    else:
+                        self.price = int(float(str(price)))
+                except (ValueError, TypeError, AttributeError):
                     return False, "Price must be a valid number"
 
             self.updated_at = datetime.utcnow()
