@@ -51,41 +51,55 @@ const OrdersManagement = () => {
     );
   }
 
+  // Filter functions for different tabs
+  const pendingOrders = orders.filter((o) =>
+    ["confirmed", "preparing", "ready"].includes(o.status)
+  );
+
+  const deliveredOrders = orders.filter((o) => o.status === "delivered");
+
+  const cancelledOrders = orders.filter((o) => o.status === "cancelled");
+
+  // Stats calculations
+  const calculateTodaysOrders = () => {
+    return deliveredOrders.filter(
+      (o) => new Date(o.created_at).toDateString() === new Date().toDateString()
+    ).length;
+  };
+
   const calculateTodaysRevenue = () => {
-    return orders
+    return deliveredOrders
       .filter(
-        (o) =>
-          new Date(o.created_at).toDateString() === new Date().toDateString() &&
-          o.status === "delivered"
+        (o) => new Date(o.created_at).toDateString() === new Date().toDateString()
       )
       .reduce((sum, o) => sum + o.price, 0);
   };
 
-  const calculateTotalRevenue = () => {
-    return orders
-      .filter((o) => o.status === "delivered")
-      .reduce((sum, o) => sum + o.price, 0);
-  };
-
-  const calculateTodaysOrders = () => {
-    return orders.filter(
-      (o) =>
-        new Date(o.created_at).toDateString() === new Date().toDateString() &&
-        o.status === "delivered"
-    ).length;
-  };
-
   const calculateTodaysCancelledOrders = () => {
-    return orders.filter(
-      (o) =>
-        new Date(o.created_at).toDateString() === new Date().toDateString() &&
-        o.status === "cancelled"
+    return cancelledOrders.filter(
+      (o) => new Date(o.created_at).toDateString() === new Date().toDateString()
     ).length;
   };
 
-  const pendingOrders = orders.filter((o) =>
-    ["confirmed", "preparing", "ready"].includes(o.status)
-  );
+  const calculateTotalRevenue = () => {
+    return deliveredOrders.reduce((sum, o) => sum + o.price, 0);
+  };
+
+  // Get orders for the current tab
+  const getFilteredOrders = () => {
+    switch (activeTab) {
+      case "pending":
+        return pendingOrders;
+      case "delivered":
+        return deliveredOrders;
+      case "cancelled":
+        return cancelledOrders;
+      default:
+        return orders;
+    }
+  };
+
+  const filteredOrders = getFilteredOrders();
 
   return (
     <div className="space-y-6">
@@ -119,7 +133,17 @@ const OrdersManagement = () => {
         </div>
 
         <div className="mb-4 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-4 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "all"
+                  ? "border-primary-500 text-orange-500"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              All Orders
+            </button>
             <button
               onClick={() => setActiveTab("pending")}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
@@ -131,50 +155,59 @@ const OrdersManagement = () => {
               Pending Orders
             </button>
             <button
-              onClick={() => setActiveTab("all")}
+              onClick={() => setActiveTab("delivered")}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "all"
+                activeTab === "delivered"
                   ? "border-primary-500 text-orange-500"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              All Orders
+              Delivered Orders
+            </button>
+            <button
+              onClick={() => setActiveTab("cancelled")}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "cancelled"
+                  ? "border-primary-500 text-orange-500"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Cancelled Orders
             </button>
           </nav>
         </div>
 
         <div className="space-y-4">
           <h2 className="text-lg font-medium text-gray-900">
-            {activeTab === "pending" ? "Pending Orders" : "All Orders"}
+            {activeTab === "pending"
+              ? "Pending Orders"
+              : activeTab === "delivered"
+              ? "Delivered Orders"
+              : activeTab === "cancelled"
+              ? "Cancelled Orders"
+              : "All Orders"}
           </h2>
 
-          {activeTab === "pending" ? (
-            pendingOrders.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No pending orders available</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {pendingOrders.map((order) => (
-                  <OrderCard
-                    key={order.order_id}
-                    order={order}
-                    onStatusUpdate={handleStatusUpdate}
-                  />
-                ))}
-              </div>
-            )
-          ) : orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No orders found</p>
+              <p className="text-gray-500">
+                {activeTab === "pending"
+                  ? "No pending orders available"
+                  : activeTab === "delivered"
+                  ? "No delivered orders found"
+                  : activeTab === "cancelled"
+                  ? "No cancelled orders found"
+                  : "No orders found"}
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <OrderCard
                   key={order.order_id}
                   order={order}
                   onStatusUpdate={handleStatusUpdate}
+                  showActions={activeTab === "pending" || activeTab === "all"}
                 />
               ))}
             </div>
@@ -199,7 +232,7 @@ const StatCard = ({ title, value, icon }) => {
   );
 };
 
-const OrderCard = ({ order, onStatusUpdate }) => {
+const OrderCard = ({ order, onStatusUpdate, showActions = true }) => {
   const statusColors = {
     confirmed: "bg-yellow-100 text-yellow-800",
     preparing: "bg-blue-100 text-blue-800",
@@ -301,7 +334,7 @@ const OrderCard = ({ order, onStatusUpdate }) => {
         </div>
       </div>
 
-      {statusActions[order.status] && (
+      {showActions && statusActions[order.status] && (
         <div className="mt-4 flex space-x-2">
           {statusActions[order.status].map((action) => (
             <button
