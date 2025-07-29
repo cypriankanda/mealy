@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 
 const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    description: initialData?.description || '',
-    price: initialData?.price || '',
+    name: '',
+    description: '',
+    price: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -12,7 +12,20 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
 
   useEffect(() => {
     if (isOpen) {
-      // Disable scrolling on the body when modal is open
+      // Reset form when opening
+      if (initialData) {
+        setFormData({
+          name: initialData.name || '',
+          description: initialData.description || '',
+          price: initialData.price || '',
+        });
+      } else {
+        setFormData({
+          name: '',
+          description: '',
+          price: '',
+        });
+      }
       document.body.style.overflow = 'hidden';
       setShowModal(true);
     } else {
@@ -22,7 +35,7 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [isOpen]);
+  }, [isOpen, initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,7 +65,7 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
 
   const handleClose = () => {
     setShowModal(false);
-    setTimeout(onClose, 300); // Match this with the transition duration
+    setTimeout(onClose, 300);
   };
 
   if (!isOpen && !showModal) return null;
@@ -103,7 +116,6 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
               )}
 
               <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-                {/* Form fields remain the same as before */}
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                     Meal Name

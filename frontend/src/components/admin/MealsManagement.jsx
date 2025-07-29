@@ -10,6 +10,7 @@ const MealsManagement = () => {
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingMeal, setEditingMeal] = useState(null)
+  const [formInitialData, setFormInitialData] = useState(null)
 
   useEffect(() => {
     const fetchMeals = async () => {
@@ -44,6 +45,7 @@ const MealsManagement = () => {
         meal.id === mealId ? response.data : meal
       ))
       setEditingMeal(null)
+      setIsFormOpen(false)
     } catch (error) {
       console.error('Error updating meal:', error)
       throw error.response?.data?.message || 'Failed to update meal'
@@ -57,6 +59,16 @@ const MealsManagement = () => {
     } catch (error) {
       console.error('Error marking meal as unavailable:', error)
     }
+  }
+
+  const handleEditClick = (meal) => {
+    setEditingMeal(meal)
+    setFormInitialData({
+      name: meal.name,
+      description: meal.description,
+      price: meal.price.toString()
+    })
+    setIsFormOpen(true)
   }
 
   if (loading) {
@@ -76,6 +88,7 @@ const MealsManagement = () => {
         <button
           onClick={() => {
             setEditingMeal(null)
+            setFormInitialData(null)
             setIsFormOpen(true)
           }}
           className="mb-6 cursor-pointer inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -94,10 +107,7 @@ const MealsManagement = () => {
               <MealItem 
                 key={meal.id} 
                 meal={meal} 
-                onEdit={() => {
-                  setEditingMeal(meal)
-                  setIsFormOpen(true)
-                }}
+                onEdit={() => handleEditClick(meal)}
                 onDelete={() => handleDeleteMeal(meal.id)}
               />
             ))
@@ -110,12 +120,13 @@ const MealsManagement = () => {
         onClose={() => {
           setIsFormOpen(false)
           setEditingMeal(null)
+          setFormInitialData(null)
         }}
         onSubmit={editingMeal ? 
           (data) => handleUpdateMeal(editingMeal.id, data) : 
           handleCreateMeal
         }
-        initialData={editingMeal || null}
+        initialData={formInitialData}
       />
     </div>
   )

@@ -18,12 +18,7 @@ const OrdersManagement = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        let params = {};
-        if (activeTab === "pending") {
-          params.status = ["confirmed", "preparing", "ready"];
-        }
-
-        const response = await api.get("/admin/orders", { params });
+        const response = await api.get("/admin/orders");
         setOrders(response.data.data);
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -33,13 +28,13 @@ const OrdersManagement = () => {
     };
 
     fetchOrders();
-  }, [activeTab]);
+  }, []);
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await api.put(`/admin/orders/${orderId}/status`, { status: newStatus });
-      setOrders(
-        orders.map((order) =>
+      setOrders(prevOrders =>
+        prevOrders.map((order) =>
           order.order_id === orderId ? { ...order, status: newStatus } : order
         )
       );
@@ -88,6 +83,10 @@ const OrdersManagement = () => {
     ).length;
   };
 
+  const pendingOrders = orders.filter((o) =>
+    ["confirmed", "preparing", "ready"].includes(o.status)
+  );
+
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
@@ -104,11 +103,7 @@ const OrdersManagement = () => {
           />
           <StatCard
             title="Pending Orders"
-            value={
-              orders.filter((o) =>
-                ["confirmed", "preparing", "ready"].includes(o.status)
-              ).length
-            }
+            value={pendingOrders.length}
             icon={<ClockIcon className="h-6 w-6 text-yellow-500" />}
           />
           <StatCard
@@ -153,7 +148,23 @@ const OrdersManagement = () => {
             {activeTab === "pending" ? "Pending Orders" : "All Orders"}
           </h2>
 
-          {orders.length === 0 ? (
+          {activeTab === "pending" ? (
+            pendingOrders.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No pending orders available</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingOrders.map((order) => (
+                  <OrderCard
+                    key={order.order_id}
+                    order={order}
+                    onStatusUpdate={handleStatusUpdate}
+                  />
+                ))}
+              </div>
+            )
+          ) : orders.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">No orders found</p>
             </div>
