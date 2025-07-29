@@ -7,11 +7,8 @@ import {
   ShoppingBagIcon,
   ArrowUpIcon,
   ArrowDownIcon,
-  ClockIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  CogIcon,
-  TrophyIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
 
 const Dashboard = () => {
@@ -26,126 +23,157 @@ const Dashboard = () => {
   const [cancelledOrdersCount, setCancelledOrdersCount] = useState(0);
   const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
+  // Function to calculate monthly stats
+  const calculateMonthlyStats = (allOrders) => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    // Filter orders for the current month and year
+    const monthlyData = allOrders.filter((order) => {
+      const orderDate = new Date(order.created_at);
+      return (
+        orderDate.getMonth() === currentMonth &&
+        orderDate.getFullYear() === currentYear
+      );
+    });
 
-        const allOrdersResponse = await api.get("/admin/orders");
-        const allOrders = allOrdersResponse.data.data;
+    // Calculate all monthly orders (regardless of status)
+    setMonthlyOrders(monthlyData.length);
+    
+    // Calculate monthly revenue from delivered orders only
+    const deliveredMonthlyOrders = monthlyData.filter(
+      (order) => order.status === "delivered"
+    );
+    
+    setMonthlyRevenue(
+      deliveredMonthlyOrders.reduce((sum, order) => sum + order.price, 0)
+    );
+  };
 
-        const todayOrders = allOrders.filter(
-          (order) =>
-            new Date(order.created_at).toDateString() === today.toDateString()
-        );
-        const yesterdayOrders = allOrders.filter(
-          (order) =>
-            new Date(order.created_at).toDateString() ===
-            yesterday.toDateString()
-        );
+  // Function to fetch all data
+  const fetchData = async () => {
+    try {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
 
-        const todayCompletedOrders = todayOrders.filter(
-          (order) => order.status === "delivered"
-        );
-        const todayCancelledOrders = todayOrders.filter(
-          (order) => order.status === "cancelled"
-        );
+      const allOrdersResponse = await api.get("/admin/orders");
+      const allOrders = allOrdersResponse.data.data;
 
-        const todayStats = {
-          total_orders: todayCompletedOrders.length,
-          total_revenue: todayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: todayCancelledOrders.length,
-        };
+      // Calculate all stats from the complete orders data
+      calculateMonthlyStats(allOrders);
 
-        const yesterdayCompletedOrders = yesterdayOrders.filter(
-          (order) => order.status === "delivered"
-        );
-        const yesterdayCancelledOrders = yesterdayOrders.filter(
-          (order) => order.status === "cancelled"
-        );
+      // Filter orders for today and yesterday
+      const todayOrders = allOrders.filter(
+        (order) =>
+          new Date(order.created_at).toDateString() === today.toDateString()
+      );
+      const yesterdayOrders = allOrders.filter(
+        (order) =>
+          new Date(order.created_at).toDateString() === yesterday.toDateString()
+      );
 
-        const yesterdayStats = {
-          total_orders: yesterdayCompletedOrders.length,
-          total_revenue: yesterdayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: yesterdayCancelledOrders.length,
-        };
+      const todayCompletedOrders = todayOrders.filter(
+        (order) => order.status === "delivered"
+      );
+      const todayCancelledOrders = todayOrders.filter(
+        (order) => order.status === "cancelled"
+      );
 
-        const recentOrdersResponse = await api.get("/admin/orders?per_page=5");
+      const todayStats = {
+        total_orders: todayCompletedOrders.length,
+        total_revenue: todayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
+        cancelled_orders: todayCancelledOrders.length,
+      };
 
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const monthlyData = allOrders.filter((order) => {
-          const orderDate = new Date(order.created_at);
-          return (
-            orderDate.getMonth() === currentMonth &&
-            orderDate.getFullYear() === currentYear &&
-            order.status === "delivered"
-          );
-        });
-        
-        const monthlyCount = monthlyData.length;
-        const monthlyRev = monthlyData.reduce((sum, order) => sum + order.price, 0);
+      const yesterdayCompletedOrders = yesterdayOrders.filter(
+        (order) => order.status === "delivered"
+      );
+      const yesterdayCancelledOrders = yesterdayOrders.filter(
+        (order) => order.status === "cancelled"
+      );
 
-        setStats(todayStats);
-        setYesterdayStats(yesterdayStats);
-        setRecentOrders(recentOrdersResponse.data.data);
-        setCancelledOrdersCount(todayStats.cancelled_orders);
-        setCompletedOrdersCount(todayStats.total_orders);
-        setMonthlyOrders(monthlyCount);
-        setMonthlyRevenue(monthlyRev);
+      const yesterdayStats = {
+        total_orders: yesterdayCompletedOrders.length,
+        total_revenue: yesterdayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
+        cancelled_orders: yesterdayCancelledOrders.length,
+      };
 
-        const startOfWeek = new Date();
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
+      const recentOrdersResponse = await api.get("/admin/orders?per_page=5");
 
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        endOfWeek.setHours(23, 59, 59, 999);
+      setStats(todayStats);
+      setYesterdayStats(yesterdayStats);
+      setRecentOrders(recentOrdersResponse.data.data);
+      setCancelledOrdersCount(todayStats.cancelled_orders);
+      setCompletedOrdersCount(todayStats.total_orders);
 
-        const weeklyMealCounts = {};
+      // Calculate most popular meal of the week
+      const startOfWeek = new Date();
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
 
-        allOrders.forEach((order) => {
-          const orderDate = new Date(order.created_at);
-          if (
-            orderDate >= startOfWeek &&
-            orderDate <= endOfWeek &&
-            order.status === "delivered"
-          ) {
-            weeklyMealCounts[order.meal_name] =
-              (weeklyMealCounts[order.meal_name] || 0) + 1;
-          }
-        });
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
 
-        let mostPopularWeekly = null;
-        Object.entries(weeklyMealCounts).forEach(([name, count]) => {
-          if (!mostPopularWeekly || count > mostPopularWeekly.count) {
-            mostPopularWeekly = {
-              name,
-              count,
-            };
-          }
-        });
+      const weeklyMealCounts = {};
+      const weeklyMealRevenue = {};
 
-        if (mostPopularWeekly) {
-          setPopularMeal({
-            name: mostPopularWeekly.name,
-            order_count: mostPopularWeekly.count,
-          });
-        } else {
-          setPopularMeal(null);
+      allOrders.forEach((order) => {
+        const orderDate = new Date(order.created_at);
+        if (
+          orderDate >= startOfWeek &&
+          orderDate <= endOfWeek &&
+          order.status === "delivered"
+        ) {
+          weeklyMealCounts[order.meal_name] =
+            (weeklyMealCounts[order.meal_name] || 0) + 1;
+          weeklyMealRevenue[order.meal_name] =
+            (weeklyMealRevenue[order.meal_name] || 0) + order.price;
         }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      });
 
+      let mostPopularWeekly = null;
+      Object.entries(weeklyMealCounts).forEach(([name, count]) => {
+        if (!mostPopularWeekly || count > mostPopularWeekly.count) {
+          mostPopularWeekly = {
+            name,
+            count,
+            total_revenue: weeklyMealRevenue[name],
+          };
+        }
+      });
+
+      if (mostPopularWeekly) {
+        setPopularMeal({
+          name: mostPopularWeekly.name,
+          order_count: mostPopularWeekly.count,
+          average_price:
+            mostPopularWeekly.total_revenue / mostPopularWeekly.count,
+        });
+      } else {
+        setPopularMeal(null);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Initial fetch
     fetchData();
+
+    // Set up polling for real-time updates (every 30 seconds)
+    const pollInterval = setInterval(fetchData, 30000);
+
+    // Clean up interval on unmount
+    return () => clearInterval(pollInterval);
   }, []);
 
+  // Calculate comparison with yesterday
   const getComparisonText = (
     todayValue,
     yesterdayValue,
@@ -194,8 +222,6 @@ const Dashboard = () => {
           <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
           <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
           <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
-          <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '6s'}}></div>
-          <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '8s'}}></div>
         </div>
         
         <div className="flex justify-center items-center h-screen relative z-10">
@@ -207,7 +233,6 @@ const Dashboard = () => {
             <p className="mt-6 text-lg font-medium bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">
               Fetching your business insights...
             </p>
-            <p className="mt-2 text-sm text-gray-500">Please wait while we load your dashboard</p>
           </div>
         </div>
       </div>
@@ -220,8 +245,6 @@ const Dashboard = () => {
         <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/20 to-green-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
         <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-green-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-r from-blue-300/20 to-orange-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
-        <div className="absolute bottom-10 right-10 w-60 h-60 bg-gradient-to-r from-red-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '6s'}}></div>
-        <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '8s'}}></div>
       </div>
 
       <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -331,7 +354,19 @@ const Dashboard = () => {
                                 KSh {order.price.toLocaleString("en-KE")}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <OrderStatusPill status={order.status} />
+                                <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  order.status === "delivered"
+                                    ? "bg-green-100 text-green-800"
+                                    : order.status === "cancelled"
+                                    ? "bg-red-100 text-red-800"
+                                    : order.status === "ready"
+                                    ? "bg-gray-100 text-gray-800"
+                                    : order.status === "preparing"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}>
+                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -356,25 +391,38 @@ const Dashboard = () => {
                 Today's Summary
               </h2>
               <div className="space-y-4">
-                <SummaryItem
-                  icon={<CheckCircleIcon className="h-5 w-5" />}
-                  label="Orders Completed"
-                  value={completedOrdersCount || 0}
-                  gradient="from-green-400 to-green-600"
-                />
-                <SummaryItem
-                  icon={<CurrencyDollarIcon className="h-5 w-5" />}
-                  label="Revenue Generated"
-                  value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE") || 0}`}
-                  gradient="from-green-400 to-green-600"
-                />
-                <SummaryItem
-                  icon={<XCircleIcon className="h-5 w-5" />}
-                  label="Cancelled Orders"
-                  value={cancelledOrdersCount || 0}
-                  subtitle={cancelledComparison.text}
-                  gradient="from-red-400 to-red-600"
-                />
+                <div className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-gray-50/50 to-white/50 border border-gray-100/50 hover:shadow-md transition-all duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="rounded-xl p-2 bg-gradient-to-r from-green-400 to-green-600 text-white shadow-md">
+                      <CheckCircleIcon className="h-5 w-5" />
+                    </div>
+                    <span className="text-gray-700 font-medium text-sm sm:text-base">Completed Orders</span>
+                  </div>
+                  <span className="font-bold text-gray-900 text-base sm:text-lg">{completedOrdersCount || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-gray-50/50 to-white/50 border border-gray-100/50 hover:shadow-md transition-all duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="rounded-xl p-2 bg-gradient-to-r from-green-400 to-green-600 text-white shadow-md">
+                      <CurrencyDollarIcon className="h-5 w-5" />
+                    </div>
+                    <span className="text-gray-700 font-medium text-sm sm:text-base">Revenue Generated</span>
+                  </div>
+                  <span className="font-bold text-gray-900 text-base sm:text-lg">
+                    KSh {stats?.total_revenue?.toLocaleString("en-KE") || 0}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-gray-50/50 to-white/50 border border-gray-100/50 hover:shadow-md transition-all duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="rounded-xl p-2 bg-gradient-to-r from-red-400 to-red-600 text-white shadow-md">
+                      <XCircleIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-gray-700 font-medium text-sm sm:text-base">Cancelled Orders</span>
+                      <p className="text-xs text-gray-500 mt-1">{cancelledComparison.text}</p>
+                    </div>
+                  </div>
+                  <span className="font-bold text-gray-900 text-base sm:text-lg">{cancelledOrdersCount || 0}</span>
+                </div>
               </div>
             </div>
 
@@ -385,7 +433,7 @@ const Dashboard = () => {
               {popularMeal ? (
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl p-4 shadow-lg">
-                    <TrophyIcon className="h-8 w-8 text-white" />
+                    <ChartBarIcon className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-gray-900 text-lg mb-1">
@@ -404,7 +452,7 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <TrophyIcon className="h-12 w-12 text-purple-300 mx-auto mb-3" />
+                  <ChartBarIcon className="h-12 w-12 text-purple-300 mx-auto mb-3" />
                   <p className="text-purple-600 font-medium">No popular meal data available</p>
                   <p className="text-purple-500 text-sm mt-1">Data will appear as orders come in</p>
                 </div>
@@ -508,64 +556,6 @@ const StatCard = ({ title, value, change, isIncrease, icon, gradient, delay }) =
           </div>
         )}
       </div>
-    </div>
-  );
-};
-
-const SummaryItem = ({ icon, label, value, gradient, subtitle }) => {
-  return (
-    <div className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-gray-50/50 to-white/50 border border-gray-100/50 hover:shadow-md transition-all duration-300 group"> 
-      <div className="flex items-center space-x-3">
-        <div className={`rounded-xl p-2 bg-gradient-to-r ${gradient} text-white shadow-md group-hover:shadow-lg transition-shadow`}>
-          {icon}
-        </div>
-        <div>
-          <span className="text-gray-700 font-medium text-sm sm:text-base">{label}</span> 
-          {subtitle && (
-            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-          )}
-        </div>
-      </div>
-      <span className="font-bold text-gray-900 text-base sm:text-lg">{value}</span> 
-    </div>
-  );
-};
-
-const OrderStatusPill = ({ status }) => {
-  const getStatusConfig = (status) => {
-    const configs = {
-      delivered: {
-        gradient: "from-green-400 to-green-600",
-        icon: <CheckCircleIcon className="h-4 w-4" />
-      },
-      cancelled: {
-        gradient: "from-red-400 to-red-600", 
-        icon: <XCircleIcon className="h-4 w-4" />
-      },
-      ready: {
-        gradient: "from-blue-400 to-blue-600",
-        icon: <CheckCircleIcon className="h-4 w-4" />
-      },
-      preparing: {
-        gradient: "from-yellow-400 to-yellow-600",
-        icon: <CogIcon className="h-4 w-4 animate-spin" />
-      },
-      pending: {
-        gradient: "from-orange-400 to-orange-600",
-        icon: <ClockIcon className="h-4 w-4" />
-      }
-    };
-    return configs[status] || configs.pending;
-  };
-
-  const statusConfig = getStatusConfig(status);
-
-  return (
-    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${statusConfig.gradient} text-white shadow-md`}>
-      {statusConfig.icon}
-      <span className="ml-1">
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
     </div>
   );
 };
