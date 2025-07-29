@@ -131,7 +131,7 @@ const Login = () => {
           </p>
         </div>
         
-        <div className="mt-6 border-t border-gray-200 pt-6">
+        {/* <div className="mt-6 border-t border-gray-200 pt-6">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Demo accounts:</h3>
           <div className="flex space-x-4">
             <button
@@ -147,7 +147,7 @@ const Login = () => {
               Customer Demo
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   )
