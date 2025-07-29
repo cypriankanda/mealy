@@ -138,7 +138,7 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
             {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
           </div>
 
-          {initialData.hasOwnProperty('is_active') && (
+          {/* {initialData.hasOwnProperty('is_active') && (
             <div className="flex items-center justify-between py-2">
               <span className="block text-sm font-medium text-gray-700">
                 Available for Order
@@ -155,7 +155,7 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
               </label>
             </div>
-          )}
+          )} */}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
