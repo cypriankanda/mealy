@@ -76,7 +76,18 @@ const Dashboard = () => {
 
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
-        const monthlyData = allOrders.filter((order) => {
+        
+        // Monthly orders: All orders in the current month (regardless of status)
+        const monthlyOrdersData = allOrders.filter((order) => {
+          const orderDate = new Date(order.created_at);
+          return (
+            orderDate.getMonth() === currentMonth &&
+            orderDate.getFullYear() === currentYear
+          );
+        });
+        
+        // Monthly revenue: Only from delivered orders (actual earnings)
+        const monthlyRevenueData = allOrders.filter((order) => {
           const orderDate = new Date(order.created_at);
           return (
             orderDate.getMonth() === currentMonth &&
@@ -85,8 +96,8 @@ const Dashboard = () => {
           );
         });
         
-        const monthlyCount = monthlyData.length;
-        const monthlyRev = monthlyData.reduce((sum, order) => sum + order.price, 0);
+        const monthlyCount = monthlyOrdersData.length;
+        const monthlyRev = monthlyRevenueData.reduce((sum, order) => sum + order.price, 0);
 
         setStats(todayStats);
         setYesterdayStats(yesterdayStats);
@@ -276,7 +287,7 @@ const Dashboard = () => {
           <StatCard
             title="Monthly Orders"
             value={monthlyOrders || 0}
-            change="This month"
+            change="All orders this month"
             icon={<ShoppingBagIcon className="h-7 w-7" />}
             gradient="from-blue-400 to-blue-600"
             delay="200"
@@ -284,7 +295,7 @@ const Dashboard = () => {
           <StatCard
             title="Monthly Revenue"
             value={`KSh ${monthlyRevenue?.toLocaleString("en-KE") || 0}`}
-            change="This month"
+            change="From delivered orders"
             icon={<CurrencyDollarIcon className="h-7 w-7" />}
             gradient="from-purple-400 to-purple-600"
             delay="300"
