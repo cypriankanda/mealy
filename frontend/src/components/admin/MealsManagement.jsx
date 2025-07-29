@@ -56,7 +56,6 @@ const MealsManagement = () => {
       setMeals(meals.filter(meal => meal.id !== mealId))
     } catch (error) {
       console.error('Error marking meal as unavailable:', error)
-      // Optionally show a toast or alert here
     }
   }
 
@@ -116,7 +115,7 @@ const MealsManagement = () => {
           (data) => handleUpdateMeal(editingMeal.id, data) : 
           handleCreateMeal
         }
-        initialData={editingMeal || { name: '', description: '', price: '' }}
+        initialData={editingMeal || null}
       />
     </div>
   )

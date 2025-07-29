@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [monthlyOrders, setMonthlyOrders] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [popularMeal, setPopularMeal] = useState(null);
   const [cancelledOrdersCount, setCancelledOrdersCount] = useState(0);
 
@@ -30,58 +31,64 @@ const Dashboard = () => {
         const allOrdersResponse = await api.get("/admin/orders");
         const allOrders = allOrdersResponse.data.data;
 
-        // Filter orders for today and yesterday
+        // Filter orders for today and yesterday (delivered only)
         const todayOrders = allOrders.filter(
           (order) =>
-            new Date(order.created_at).toDateString() === today.toDateString()
+            new Date(order.created_at).toDateString() === today.toDateString() &&
+            order.status === "delivered"
         );
+        
         const yesterdayOrders = allOrders.filter(
           (order) =>
-            new Date(order.created_at).toDateString() ===
-            yesterday.toDateString()
+            new Date(order.created_at).toDateString() === yesterday.toDateString() &&
+            order.status === "delivered"
         );
 
         // Calculate today's stats
         const todayStats = {
           total_orders: todayOrders.length,
-          total_revenue: todayOrders
-            .filter((order) => order.status !== "cancelled")
-            .reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: todayOrders.filter(
-            (order) => order.status === "cancelled"
+          total_revenue: todayOrders.reduce((sum, order) => sum + order.price, 0),
+          cancelled_orders: allOrders.filter(
+            (order) => 
+              new Date(order.created_at).toDateString() === today.toDateString() &&
+              order.status === "cancelled"
           ).length,
         };
 
         // Calculate yesterday's stats
         const yesterdayStats = {
           total_orders: yesterdayOrders.length,
-          total_revenue: yesterdayOrders
-            .filter((order) => order.status !== "cancelled")
-            .reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: yesterdayOrders.filter(
-            (order) => order.status === "cancelled"
+          total_revenue: yesterdayOrders.reduce((sum, order) => sum + order.price, 0),
+          cancelled_orders: allOrders.filter(
+            (order) => 
+              new Date(order.created_at).toDateString() === yesterday.toDateString() &&
+              order.status === "cancelled"
           ).length,
         };
 
         // Get recent orders
         const recentOrdersResponse = await api.get("/admin/orders?per_page=5");
 
+        // Calculate monthly orders and revenue
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const monthlyOrders = allOrders.filter((order) => {
+          const orderDate = new Date(order.created_at);
+          return (
+            orderDate.getMonth() === currentMonth &&
+            orderDate.getFullYear() === currentYear &&
+            order.status === "delivered"
+          );
+        });
+        
+        const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + order.price, 0);
+        
         setStats(todayStats);
         setYesterdayStats(yesterdayStats);
         setRecentOrders(recentOrdersResponse.data.data);
         setCancelledOrdersCount(todayStats.cancelled_orders);
-
-        // Calculate monthly orders
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const monthlyCount = allOrders.filter((order) => {
-          const orderDate = new Date(order.created_at);
-          return (
-            orderDate.getMonth() === currentMonth &&
-            orderDate.getFullYear() === currentYear
-          );
-        }).length;
-        setMonthlyOrders(monthlyCount);
+        setMonthlyOrders(monthlyOrders.length);
+        setMonthlyRevenue(monthlyRevenue);
 
         // Calculate most popular meal of the week
         const startOfWeek = new Date(today);
@@ -97,7 +104,7 @@ const Dashboard = () => {
           if (
             orderDate >= startOfWeek &&
             orderDate <= endOfWeek &&
-            order.status !== "cancelled"
+            order.status === "delivered"
           ) {
             weeklyMealCounts[order.meal_name] =
               (weeklyMealCounts[order.meal_name] || 0) + 1;
@@ -211,15 +218,15 @@ const Dashboard = () => {
             color="green"
           />
           <StatCard
-            title="Total Orders"
+            title="Monthly Orders"
             value={monthlyOrders}
             change="This month"
             icon={<ShoppingBagIcon className="h-6 w-6 text-blue-500" />}
             color="blue"
           />
           <StatCard
-            title="Total Revenue"
-            value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE") || 0}`}
+            title="Monthly Revenue"
+            value={`KSh ${monthlyRevenue.toLocaleString("en-KE") || 0}`}
             change="This month"
             icon={<CurrencyDollarIcon className="h-6 w-6 text-purple-500" />}
             color="purple"
@@ -262,7 +269,7 @@ const Dashboard = () => {
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Orders Received</span>
+                  <span className="text-gray-600">Completed Orders</span>
                   <span className="font-medium">{stats?.total_orders}</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -301,10 +308,6 @@ const Dashboard = () => {
                     <p className="text-sm text-gray-500">
                       Top selling item this week
                     </p>
-                    {/* <p className="text-sm text-gray-500 mt-1">
-                      Average order value: KSh{" "}
-                      {popularMeal.average_price?.toFixed(2) || "0"}
-                    </p> */}
                     <p className="text-sm text-gray-500">
                       {popularMeal.order_count} orders this week
                     </p>

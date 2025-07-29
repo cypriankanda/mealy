@@ -17,20 +17,20 @@ const OrdersManagement = () => {
 
   useEffect(() => {
     const fetchOrders = async () => {
-  try {
-    let params = {};
-    if (activeTab === "pending") {
-      params.status = ["confirmed", "preparing", "ready"];
-    }
+      try {
+        let params = {};
+        if (activeTab === "pending") {
+          params.status = ["confirmed", "preparing", "ready"];
+        }
 
-    const response = await api.get("/admin/orders", { params });
-    setOrders(response.data.data);
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+        const response = await api.get("/admin/orders", { params });
+        setOrders(response.data.data);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchOrders();
   }, [activeTab]);
@@ -61,16 +61,31 @@ const OrdersManagement = () => {
       .filter(
         (o) =>
           new Date(o.created_at).toDateString() === new Date().toDateString() &&
-          o.status !== "cancelled"
+          o.status === "delivered"
       )
       .reduce((sum, o) => sum + o.price, 0);
   };
 
-  // Calculate total revenue excluding canceled orders
   const calculateTotalRevenue = () => {
     return orders
-      .filter((o) => o.status !== "cancelled")
+      .filter((o) => o.status === "delivered")
       .reduce((sum, o) => sum + o.price, 0);
+  };
+
+  const calculateTodaysOrders = () => {
+    return orders.filter(
+      (o) =>
+        new Date(o.created_at).toDateString() === new Date().toDateString() &&
+        o.status === "delivered"
+    ).length;
+  };
+
+  const calculateTodaysCancelledOrders = () => {
+    return orders.filter(
+      (o) =>
+        new Date(o.created_at).toDateString() === new Date().toDateString() &&
+        o.status === "cancelled"
+    ).length;
   };
 
   return (
@@ -84,13 +99,7 @@ const OrdersManagement = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <StatCard
             title="Today's Orders"
-            value={
-              orders.filter(
-                (o) =>
-                  new Date(o.created_at).toDateString() ===
-                  new Date().toDateString()
-              ).length
-            }
+            value={calculateTodaysOrders()}
             icon={<ShoppingBagIcon className="h-6 w-6 text-primary-500" />}
           />
           <StatCard
@@ -108,9 +117,9 @@ const OrdersManagement = () => {
             icon={<CurrencyDollarIcon className="h-6 w-6 text-green-500" />}
           />
           <StatCard
-            title="Total Revenue"
-            value={`KSh ${calculateTotalRevenue().toLocaleString("en-KE")}`}
-            icon={<CurrencyDollarIcon className="h-6 w-6 text-blue-500" />}
+            title="Cancelled Orders"
+            value={calculateTodaysCancelledOrders()}
+            icon={<XCircleIcon className="h-6 w-6 text-red-500" />}
           />
         </div>
 
