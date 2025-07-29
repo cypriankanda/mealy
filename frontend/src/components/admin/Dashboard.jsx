@@ -21,8 +21,10 @@ const Dashboard = () => {
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [monthlyOrders, setMonthlyOrders] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0); // Added monthly revenue state
   const [popularMeal, setPopularMeal] = useState(null);
   const [cancelledOrdersCount, setCancelledOrdersCount] = useState(0);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState(0); // Added completed orders state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,55 +49,67 @@ const Dashboard = () => {
         );
 
         // Calculate today's stats
+        const todayCompletedOrders = todayOrders.filter(
+          (order) => order.status === "delivered"
+        );
+        const todayCancelledOrders = todayOrders.filter(
+          (order) => order.status === "cancelled"
+        );
+
         const todayStats = {
-          total_orders: todayOrders.length,
-          total_revenue: todayOrders
-            .filter((order) => order.status !== "cancelled")
-            .reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: todayOrders.filter(
-            (order) => order.status === "cancelled"
-          ).length,
+          total_orders: todayCompletedOrders.length, // Only count delivered orders
+          total_revenue: todayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
+          cancelled_orders: todayCancelledOrders.length,
         };
 
         // Calculate yesterday's stats
+        const yesterdayCompletedOrders = yesterdayOrders.filter(
+          (order) => order.status === "delivered"
+        );
+        const yesterdayCancelledOrders = yesterdayOrders.filter(
+          (order) => order.status === "cancelled"
+        );
+
         const yesterdayStats = {
-          total_orders: yesterdayOrders.length,
-          total_revenue: yesterdayOrders
-            .filter((order) => order.status !== "cancelled")
-            .reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: yesterdayOrders.filter(
-            (order) => order.status === "cancelled"
-          ).length,
+          total_orders: yesterdayCompletedOrders.length, // Only count delivered orders
+          total_revenue: yesterdayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
+          cancelled_orders: yesterdayCancelledOrders.length,
         };
 
         // Get recent orders
         const recentOrdersResponse = await api.get("/admin/orders?per_page=5");
 
+        // Calculate monthly orders and revenue
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const monthlyData = allOrders.filter((order) => {
+          const orderDate = new Date(order.created_at);
+          return (
+            orderDate.getMonth() === currentMonth &&
+            orderDate.getFullYear() === currentYear &&
+            order.status === "delivered" // Only count delivered orders for monthly stats
+          );
+        });
+        
+        const monthlyCount = monthlyData.length;
+        const monthlyRev = monthlyData.reduce((sum, order) => sum + order.price, 0);
+
         setStats(todayStats);
         setYesterdayStats(yesterdayStats);
         setRecentOrders(recentOrdersResponse.data.data);
         setCancelledOrdersCount(todayStats.cancelled_orders);
-
-        // Calculate monthly orders
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const monthlyCount = allOrders.filter((order) => {
-          const orderDate = new Date(order.created_at);
-          return (
-            orderDate.getMonth() === currentMonth &&
-            orderDate.getFullYear() === currentYear
-          );
-        }).length;
+        setCompletedOrdersCount(todayStats.total_orders);
         setMonthlyOrders(monthlyCount);
+        setMonthlyRevenue(monthlyRev);
 
-        // Calculate most popular meal of the week
-        const startOfWeek = new Date(); // Start from today
-        startOfWeek.setDate(today.getDate() - today.getDay()); // Go back to Sunday (0-6 for Sun-Sat)
-        startOfWeek.setHours(0, 0, 0, 0); // Set to start of the day
+        // Calculate most popular meal of the week (only delivered orders)
+        const startOfWeek = new Date();
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
 
         const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week is 6 days after start of week
-        endOfWeek.setHours(23, 59, 59, 999); // Set to end of the day
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
 
         const weeklyMealCounts = {};
         const weeklyMealRevenue = {};
@@ -105,7 +119,7 @@ const Dashboard = () => {
           if (
             orderDate >= startOfWeek &&
             orderDate <= endOfWeek &&
-            order.status !== "cancelled"
+            order.status === "delivered" // Only count delivered orders for popularity
           ) {
             weeklyMealCounts[order.meal_name] =
               (weeklyMealCounts[order.meal_name] || 0) + 1;
@@ -172,7 +186,7 @@ const Dashboard = () => {
   };
 
   const ordersComparison = getComparisonText(
-    stats?.total_orders || 0,
+    completedOrdersCount || 0,
     yesterdayStats?.total_orders || 0
   );
 
@@ -228,20 +242,20 @@ const Dashboard = () => {
         <div className="absolute top-50 left-1/4 w-52 h-52 bg-gradient-to-r from-yellow-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '8s'}}></div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in"> {/* Adjusted padding for different screen sizes */}
+      <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in">
         {/* Enhanced Header */}
-        <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8"> {/* Adjusted padding */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between"> {/* Changed to flex-col for small screens, then row */}
-            <div className="flex items-center space-x-4 mb-4 sm:mb-0"> {/* Added margin-bottom for small screens */}
+        <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div className="flex items-center space-x-4 mb-4 sm:mb-0">
               <div className="relative">
-                <ChartBarIcon className="h-8 w-8 sm:h-10 sm:w-10 text-orange-500 animate-float" /> {/* Adjusted icon size */}
+                <ChartBarIcon className="h-8 w-8 sm:h-10 sm:w-10 text-orange-500 animate-float" />
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-green-500 opacity-20 rounded-lg blur-sm"></div>
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent"> {/* Adjusted font size */}
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
                   Dashboard
                 </h1>
-                <p className="text-gray-600 mt-1 text-sm sm:text-base">Overview of your catering business</p> {/* Adjusted font size */}
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">Overview of your catering business</p>
               </div>
             </div>
             <div className="hidden md:block">
@@ -260,10 +274,10 @@ const Dashboard = () => {
         </div>
 
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"> {/* Adjusted gap */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <StatCard
             title="Today's Orders"
-            value={stats?.total_orders || 0}
+            value={completedOrdersCount || 0}
             change={ordersComparison.text}
             isIncrease={ordersComparison.isIncrease}
             icon={<ShoppingBagIcon className="h-7 w-7" />}
@@ -280,10 +294,10 @@ const Dashboard = () => {
             delay="100"
           />
           <StatCard
-            title="Monthly Orders"
-            value={monthlyOrders}
+            title="Monthly Revenue"
+            value={`KSh ${monthlyRevenue?.toLocaleString("en-KE") || 0}`}
             change="This month"
-            icon={<ShoppingBagIcon className="h-7 w-7" />}
+            icon={<CurrencyDollarIcon className="h-7 w-7" />}
             gradient="from-blue-400 to-blue-600"
             delay="200"
           />
@@ -298,16 +312,16 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8"> {/* Adjusted gap */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Enhanced Recent Orders */}
           <div className="lg:col-span-2">
-            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '400ms'}}> {/* Adjusted padding */}
-              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6"> {/* Adjusted font size and margin */}
+            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '400ms'}}>
+              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6">
                 Recent Orders
               </h2>
               <div className="space-y-4">
                 {recentOrders.length > 0 ? (
-                  <div className="overflow-x-auto custom-scrollbar"> {/* Added custom scrollbar for overflow */}
+                  <div className="overflow-x-auto custom-scrollbar">
                     <div className="inline-block min-w-full align-middle">
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
@@ -361,15 +375,15 @@ const Dashboard = () => {
           {/* Enhanced Sidebar */}
           <div className="space-y-6">
             {/* Today's Summary */}
-            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '600ms'}}> {/* Adjusted padding */}
-              <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6"> {/* Adjusted margin */}
+            <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '600ms'}}>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent mb-4 sm:mb-6">
                 Today's Summary
               </h2>
               <div className="space-y-4">
                 <SummaryItem
                   icon={<ShoppingBagIcon className="h-5 w-5" />}
-                  label="Orders Received"
-                  value={stats?.total_orders || 0}
+                  label="Orders Completed"
+                  value={completedOrdersCount || 0}
                   gradient="from-orange-400 to-orange-600"
                 />
                 <SummaryItem
@@ -389,8 +403,8 @@ const Dashboard = () => {
             </div>
 
             {/* Popular Meal */}
-            <div className="backdrop-blur-lg bg-gradient-to-br from-purple-100/70 to-pink-100/70 border border-purple-200/30 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '700ms'}}> {/* Adjusted padding */}
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 sm:mb-6"> {/* Adjusted margin */}
+            <div className="backdrop-blur-lg bg-gradient-to-br from-purple-100/70 to-pink-100/70 border border-purple-200/30 shadow-2xl rounded-3xl p-6 sm:p-8 animate-slide-up" style={{animationDelay: '700ms'}}>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 sm:mb-6">
                 🏆 Popular Meal This Week
               </h2>
               {popularMeal ? (
@@ -463,7 +477,7 @@ const Dashboard = () => {
 
         /* Custom Scrollbar for Recent Orders Table */
         .custom-scrollbar {
-          -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+          -webkit-overflow-scrolling: touch;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
@@ -549,7 +563,6 @@ const SummaryItem = ({ icon, label, value, gradient, subtitle }) => {
   );
 };
 
-// Replaced OrderItem with OrderStatusPill for status display within the table
 const OrderStatusPill = ({ status }) => {
   const getStatusConfig = (status) => {
     const configs = {
