@@ -50,6 +50,12 @@ class Meal(db.Model):
             if price <= 0:
                 return None, "Price must be greater than 0"
 
+            # Convert price to integer, handling both float and string inputs
+            try:
+                price = int(float(price))
+            except (ValueError, TypeError):
+                return None, "Price must be a valid number"
+
             meal = cls(name=name, description=description, price=price, caterer_id=caterer_id)
             db.session.add(meal)
             db.session.commit()
@@ -67,7 +73,11 @@ class Meal(db.Model):
             if price is not None:
                 if price <= 0:
                     return False, "Price must be greater than 0"
-                self.price = int(price)  # Ensure price is stored in KES
+                # Convert to integer, handling both float and string inputs
+                try:
+                    self.price = int(float(price))
+                except (ValueError, TypeError):
+                    return False, "Price must be a valid number"
 
             self.updated_at = datetime.utcnow()
             db.session.commit()

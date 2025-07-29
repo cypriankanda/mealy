@@ -17,7 +17,7 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === 'price' ? parseFloat(value) || '' : value,
+      [name]: name === 'price' ? (value === '' ? '' : parseFloat(value)) : value,
     }));
     if (errors[name]) {
       setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
@@ -47,7 +47,13 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
 
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
+      // Ensure price is properly formatted before submission
+      const submissionData = {
+        ...formData,
+        price: formData.price ? parseFloat(formData.price) : 0
+      };
+      console.log('Submitting meal data:', submissionData);
+      await onSubmit(submissionData);
     } catch (err) {
       console.error('Submission error:', err);
       setErrors((prevErrors) => ({

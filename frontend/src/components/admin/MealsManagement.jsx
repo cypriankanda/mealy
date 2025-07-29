@@ -40,7 +40,9 @@ const MealsManagement = () => {
 
   const handleUpdateMeal = async (mealId, mealData) => {
     try {
+      console.log('Updating meal with ID:', mealId, 'Data:', mealData);
       const response = await api.put(`/admin/meals/${mealId}`, mealData)
+      console.log('Update response:', response.data);
       setMeals(meals.map(meal => 
         meal.id === mealId ? response.data : meal
       ))
