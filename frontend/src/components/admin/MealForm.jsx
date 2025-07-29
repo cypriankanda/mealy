@@ -52,8 +52,16 @@ const MealForm = ({ isOpen, onClose, onSubmit, initialData }) => {
         ...formData,
         price: formData.price ? parseFloat(formData.price) : 0
       };
-      console.log('Submitting meal data:', submissionData);
-      await onSubmit(submissionData);
+      
+      // For updates, only send the fields that can be updated
+      const updateData = initialData.id ? {
+        name: submissionData.name,
+        description: submissionData.description,
+        price: submissionData.price
+      } : submissionData;
+      
+      console.log('Submitting meal data:', updateData);
+      await onSubmit(updateData);
     } catch (err) {
       console.error('Submission error:', err);
       setErrors((prevErrors) => ({
