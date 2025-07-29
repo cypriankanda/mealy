@@ -50,6 +50,8 @@ const MealsManagement = () => {
       setIsFormOpen(false);
     } catch (error) {
       console.error('Error updating meal:', error)
+      console.error('Error response data:', error.response?.data)
+      console.error('Error response status:', error.response?.status)
       throw error.response?.data?.message || 'Failed to update meal'
     }
   }

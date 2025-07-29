@@ -76,12 +76,16 @@ def update_meal(meal_id):
         return jsonify({'error': 'Meal not found'}), 404
     
     try:
+        print(f"Received update data: {request.json}")
         data = meal_update_schema.load(request.json)
+        print(f"Validated data: {data}")
     except ValidationError as err:
+        print(f"Validation error: {err.messages}")
         return jsonify({'error': 'Validation failed', 'details': err.messages}), 400
     
     success, error = meal.update_meal(**data)
     if not success:
+        print(f"Update failed: {error}")
         return jsonify({'error': 'Update failed', 'message': error}), 400
     
     return jsonify(meal_schema.dump(meal)), 200
