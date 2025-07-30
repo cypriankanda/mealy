@@ -6,7 +6,6 @@ Manages order lifecycle from creation to delivery
 from datetime import datetime, date, timedelta
 from app import db
 from sqlalchemy import func
-from app.models.meal import Meal
 
 class Order(db.Model):
     """
@@ -207,6 +206,9 @@ class Order(db.Model):
         
         # Start of week (Monday)
         start_of_week = today - timedelta(days=today.weekday())
+        
+        # Import Meal locally to avoid circular import
+        from app.models.meal import Meal
         
         # Today's stats
         today_stats = cls.query.join(cls.meal).filter(
