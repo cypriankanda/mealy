@@ -47,20 +47,20 @@ class MealCreateSchema(Schema):
     """Schema for creating meals"""
     name = fields.String(required=True, validate=validate.Length(min=1, max=120))
     description = fields.String(required=True, validate=validate.Length(min=1))
-    price = fields.Float(required=True, validate=validate.Range(min=0.01))
+    price = fields.Number(required=True, validate=validate.Range(min=0.01))
 
 class MealUpdateSchema(Schema):
     """Schema for updating meals"""
     name = fields.String(validate=validate.Length(min=1, max=120))
     description = fields.String(validate=validate.Length(min=1))
-    price = fields.Float(validate=validate.Range(min=0.01))
+    price = fields.Number(validate=validate.Range(min=0.01))
 
 class MealSchema(Schema):
     """Schema for meal data serialization"""
     id = fields.Integer(dump_only=True)
     name = fields.String()
     description = fields.String()
-    price = fields.Float()
+    price = fields.Integer()  # Changed to Integer since model stores as Integer
     caterer_id = fields.Integer()
     is_active = fields.Boolean()
     created_at = fields.DateTime(dump_only=True)

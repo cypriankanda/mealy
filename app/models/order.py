@@ -3,9 +3,10 @@ Order model for handling customer meal orders
 Manages order lifecycle from creation to delivery
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from app import db
 from sqlalchemy import func
+from app.models.meal import Meal
 
 class Order(db.Model):
     """

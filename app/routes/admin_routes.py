@@ -25,10 +25,9 @@ admin_bp = Blueprint('admin', __name__)
 def get_dashboard():
     """Get dashboard statistics for admin"""
     user = get_current_user()
-    today = date.today()
     
     # Get dashboard statistics
-    stats = Order.get_dashboard_stats(user.caterer_id, today)
+    stats = Order.get_dashboard_stats(user.caterer_id)
     
     # Ensure revenue is in KES (no division needed now)
     return jsonify(stats), 200
@@ -48,10 +47,19 @@ def create_meal():
     """Create new meal"""
     user = get_current_user()
     
+    # Debug: Print received data
+    print(f"Received meal data: {request.json}")
+    
     try:
         data = meal_create_schema.load(request.json)
+        print(f"Validated data: {data}")
     except ValidationError as err:
+        print(f"Validation error: {err.messages}")
         return jsonify({'error': 'Validation failed', 'details': err.messages}), 400
+    
+    # Check if user has caterer_id
+    if not user.caterer_id:
+        return jsonify({'error': 'User is not associated with a caterer'}), 400
     
     meal, error = Meal.create_meal(
         name=data['name'],
@@ -61,6 +69,7 @@ def create_meal():
     )
     
     if error:
+        print(f"Meal creation error: {error}")
         return jsonify({'error': 'Creation failed', 'message': error}), 400
     
     return jsonify(meal_schema.dump(meal)), 201
@@ -75,13 +84,19 @@ def update_meal(meal_id):
     if not meal:
         return jsonify({'error': 'Meal not found'}), 404
     
+    # Debug: Print received update data
+    print(f"Received meal update data: {request.json}")
+    
     try:
         data = meal_update_schema.load(request.json)
+        print(f"Validated update data: {data}")
     except ValidationError as err:
+        print(f"Update validation error: {err.messages}")
         return jsonify({'error': 'Validation failed', 'details': err.messages}), 400
     
     success, error = meal.update_meal(**data)
     if not success:
+        print(f"Meal update error: {error}")
         return jsonify({'error': 'Update failed', 'message': error}), 400
     
     return jsonify(meal_schema.dump(meal)), 200
