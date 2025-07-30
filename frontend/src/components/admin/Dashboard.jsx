@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
+import { useRealTimeUpdates } from "../../utils/useRealTimeUpdates";
 import {
   ChartBarIcon,
   CurrencyDollarIcon,
@@ -12,6 +13,7 @@ import {
   XCircleIcon,
   CogIcon,
   TrophyIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
 const Dashboard = () => {
@@ -25,46 +27,211 @@ const Dashboard = () => {
   const [popularMeal, setPopularMeal] = useState(null);
   const [cancelledOrdersCount, setCancelledOrdersCount] = useState(0);
   const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
+  const [recentDeliveredCount, setRecentDeliveredCount] = useState(0);
+  const [ordersComparison, setOrdersComparison] = useState({ text: "No data", isIncrease: false });
+  const [revenueComparison, setRevenueComparison] = useState({ text: "No data", isIncrease: false });
+  const [cancelledComparison, setCancelledComparison] = useState({ text: "No data", isIncrease: false });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
+    const fetchDashboardData = useCallback(async () => {
+    try {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
 
-        const allOrdersResponse = await api.get("/admin/orders");
-        const allOrders = allOrdersResponse.data.data;
+      // Helper function for date formatting
+      const getDateString = (date) => {
+        const d = new Date(date);
+        return d.getFullYear() + '-' + 
+               String(d.getMonth() + 1).padStart(2, '0') + '-' + 
+               String(d.getDate()).padStart(2, '0');
+      };
 
-        const todayOrders = allOrders.filter(
-          (order) =>
-            new Date(order.created_at).toDateString() === today.toDateString()
-        );
-        const yesterdayOrders = allOrders.filter(
-          (order) =>
-            new Date(order.created_at).toDateString() ===
-            yesterday.toDateString()
-        );
+      const allOrdersResponse = await api.get("/admin/orders");
+      const allOrders = allOrdersResponse.data.data;
+      
+      // Debug: Log all orders to see their dates and statuses
+      console.log('🔍 ALL ORDERS DEBUG - TOTAL:', allOrders.length);
+      console.log('🔍 ALL ORDERS DEBUG - TODAY EXPECTED:', getDateString(today));
+      
+      // Emergency debug: show raw order data
+      if (allOrders.length > 0) {
+        console.log('🚨 EMERGENCY DEBUG - First order raw data:', allOrders[0]);
+      }
+      
+      // Show first 3 orders in detail
+      console.log('🔍 SAMPLE ORDERS:', allOrders.slice(0, 3).map(o => ({
+        order_id: o.order_id,
+        status: o.status,
+        created_at: o.created_at,
+        updated_at: o.updated_at,
+        created_date_formatted: getDateString(new Date(o.created_at)),
+        updated_date_formatted: o.updated_at ? getDateString(new Date(o.updated_at)) : 'N/A',
+        meal_name: o.meal_name,
+        price: o.price
+      })));
+      
+      // Show all unique creation dates
+      const allCreationDates = [...new Set(allOrders.map(o => getDateString(new Date(o.created_at))))].sort();
+      console.log('🔍 ALL ORDER CREATION DATES:', allCreationDates);
+      
+      // Check if any orders were created or updated today
+      console.log('🔍 DIRECT DATE CHECK:');
+      console.log('Today we are looking for:', getDateString(today));
+      console.log('Orders created today count:', allOrders.filter(o => getDateString(new Date(o.created_at)) === getDateString(today)).length);
+      console.log('Orders delivered today count:', allOrders.filter(o => o.status === 'delivered' && (o.updated_at ? getDateString(new Date(o.updated_at)) === getDateString(today) : getDateString(new Date(o.created_at)) === getDateString(today))).length);
+      
+      // Show all delivered orders with their delivery dates
+      const deliveredOrders = allOrders.filter(o => o.status === 'delivered');
+      console.log('🔍 DELIVERED ORDERS COUNT:', deliveredOrders.length);
+      if (deliveredOrders.length > 0) {
+        console.log('🔍 DELIVERED ORDERS SAMPLE:', deliveredOrders.slice(0, 3).map(o => ({
+          order_id: o.order_id,
+          created_at: o.created_at,
+          updated_at: o.updated_at,
+          delivery_date: o.updated_at ? getDateString(new Date(o.updated_at)) : getDateString(new Date(o.created_at))
+        })));
+      }
 
-        const todayCompletedOrders = todayOrders.filter(
-          (order) => order.status === "delivered"
-        );
-        const todayCancelledOrders = todayOrders.filter(
-          (order) => order.status === "cancelled"
-        );
+      // Fix: Count orders that were delivered today (not just created today)
+      const todayCompletedOrders = allOrders.filter(
+        (order) => {
+          // For delivered orders, we need to check when they were actually delivered
+          if (order.status !== "delivered") return false;
+          
+          // Use updated_at if available, otherwise fallback to created_at
+          const updatedDate = order.updated_at ? new Date(order.updated_at) : new Date(order.created_at);
+          const createdDate = new Date(order.created_at);
+          
+          const todayString = getDateString(today);
+          const updatedDateString = getDateString(updatedDate);
+          const createdDateString = getDateString(createdDate);
+          
+          const isDeliveredToday = updatedDateString === todayString ||
+                 (createdDateString === todayString && order.status === "delivered");
+          
+                     // Debug delivered orders
+           if (order.status === "delivered" && allOrders.filter(o => o.status === "delivered").indexOf(order) < 3) {
+             console.log(`🚚 DELIVERED ORDER ${order.order_id} - Delivered: ${updatedDateString}, Today: ${todayString}, Match: ${isDeliveredToday}`);
+           }
+          
+          return isDeliveredToday;
+        }
+      );
+      
+      const todayCancelledOrders = allOrders.filter(
+        (order) => {
+          // For cancelled orders, we need to check when they were actually cancelled
+          if (order.status !== "cancelled") return false;
+          
+          // Use updated_at if available, otherwise fallback to created_at
+          const updatedDate = order.updated_at ? new Date(order.updated_at) : new Date(order.created_at);
+          const createdDate = new Date(order.created_at);
+          
+          const todayString = getDateString(today);
+          const updatedDateString = getDateString(updatedDate);
+          const createdDateString = getDateString(createdDate);
+          
+          const isCancelledToday = updatedDateString === todayString ||
+                 (createdDateString === todayString && order.status === "cancelled");
+          
+          // Debug cancelled orders
+          if (order.status === "cancelled" && allOrders.filter(o => o.status === "cancelled").indexOf(order) < 2) {
+            console.log(`❌ CANCELLED ORDER ${order.order_id} DATE CHECK:`, {
+              status: order.status,
+              updated_at: order.updated_at,
+              created_at: order.created_at,
+              updatedDateString,
+              createdDateString,
+              todayString,
+              isCancelledToday,
+              usedUpdatedAt: !!order.updated_at
+            });
+          }
+          
+          return isCancelledToday;
+        }
+      );
 
-        const todayStats = {
-          total_orders: todayCompletedOrders.length,
-          total_revenue: todayCompletedOrders.reduce((sum, order) => sum + order.price, 0),
-          cancelled_orders: todayCancelledOrders.length,
-        };
+      // Also count orders created today for comparison (using reliable date string)
+      const todayCreatedOrders = allOrders.filter(
+        (order) => {
+          const createdDate = new Date(order.created_at);
+          const createdDateString = getDateString(createdDate);
+          const todayString = getDateString(today);
+          const isToday = createdDateString === todayString;
+          
+          // Debug each order's date comparison
+          if (allOrders.indexOf(order) < 3) { // Log first 3 orders for debugging
+            console.log(`📅 ORDER ${order.order_id} DATE CHECK - Created: ${createdDateString}, Today: ${todayString}, Match: ${isToday}`);
+          }
+          
+          return isToday;
+        }
+      );
 
-        const yesterdayCompletedOrders = yesterdayOrders.filter(
-          (order) => order.status === "delivered"
-        );
-        const yesterdayCancelledOrders = yesterdayOrders.filter(
-          (order) => order.status === "cancelled"
-        );
+              // Alternative approach: Count all delivered orders from the last 24 hours
+      const last24Hours = new Date(today.getTime() - (24 * 60 * 60 * 1000));
+      const recentDeliveredOrders = allOrders.filter(
+        (order) => {
+          if (order.status !== "delivered") return false;
+          const updatedDate = order.updated_at ? new Date(order.updated_at) : new Date(order.created_at);
+          return updatedDate >= last24Hours;
+        }
+      );
+
+      // Final filtering summary
+      console.log('📊 FILTERING SUMMARY:', {
+        totalOrdersInSystem: allOrders.length,
+        todayDateString: getDateString(today),
+        filterResults: {
+          createdToday: todayCreatedOrders.length,
+          deliveredToday: todayCompletedOrders.length,
+          cancelledToday: todayCancelledOrders.length,
+          recentDelivered: recentDeliveredOrders.length
+        },
+        ordersByStatus: {
+          total: allOrders.length,
+          delivered: allOrders.filter(o => o.status === 'delivered').length,
+          pending: allOrders.filter(o => o.status === 'pending').length,
+          preparing: allOrders.filter(o => o.status === 'preparing').length,
+          cancelled: allOrders.filter(o => o.status === 'cancelled').length
+        }
+      });
+
+      const todayStats = {
+        total_orders: todayCompletedOrders.length,
+        total_revenue: todayCompletedOrders.reduce((sum, order) => sum + (order.price || 0), 0),
+        cancelled_orders: todayCancelledOrders.length,
+        created_today: todayCreatedOrders.length,
+        recent_delivered: recentDeliveredOrders.length
+      };
+
+            // Yesterday stats - orders delivered yesterday
+      const yesterdayCompletedOrders = allOrders.filter(
+        (order) => {
+          if (order.status !== "delivered") return false;
+          
+          // Use updated_at if available, otherwise fallback to created_at
+          const updatedDate = order.updated_at ? new Date(order.updated_at) : new Date(order.created_at);
+          const createdDate = new Date(order.created_at);
+          
+          return updatedDate.toDateString() === yesterday.toDateString() || 
+                 (createdDate.toDateString() === yesterday.toDateString() && order.status === "delivered");
+        }
+      );
+      
+      const yesterdayCancelledOrders = allOrders.filter(
+        (order) => {
+          if (order.status !== "cancelled") return false;
+          
+          // Use updated_at if available, otherwise fallback to created_at
+          const updatedDate = order.updated_at ? new Date(order.updated_at) : new Date(order.created_at);
+          const createdDate = new Date(order.created_at);
+          
+          return updatedDate.toDateString() === yesterday.toDateString() || 
+                 (createdDate.toDateString() === yesterday.toDateString() && order.status === "cancelled");
+        }
+      );
 
         const yesterdayStats = {
           total_orders: yesterdayCompletedOrders.length,
@@ -99,13 +266,115 @@ const Dashboard = () => {
         const monthlyCount = monthlyOrdersData.length;
         const monthlyRev = monthlyRevenueData.reduce((sum, order) => sum + order.price, 0);
 
-        setStats(todayStats);
-        setYesterdayStats(yesterdayStats);
-        setRecentOrders(recentOrdersResponse.data.data);
-        setCancelledOrdersCount(todayStats.cancelled_orders);
-        setCompletedOrdersCount(todayStats.total_orders);
-        setMonthlyOrders(monthlyCount);
-        setMonthlyRevenue(monthlyRev);
+              setStats(todayStats);
+      setYesterdayStats(yesterdayStats);
+      setRecentOrders(recentOrdersResponse.data.data);
+      
+      // Immediate verification of state setting
+      console.log('✅ STATS SET SUCCESSFULLY:', {
+        todayStats,
+        message: 'Stats have been set in component state',
+        breakdown: {
+          'Orders placed today (created_today)': todayStats.created_today,
+          'Orders delivered today (total_orders)': todayStats.total_orders,
+          'Revenue from delivered orders': todayStats.total_revenue,
+          'Cancelled orders today': todayStats.cancelled_orders
+        }
+      });
+      setCancelledOrdersCount(todayStats.cancelled_orders);
+      setCompletedOrdersCount(todayStats.total_orders); // This represents delivered orders today
+      setRecentDeliveredCount(recentDeliveredOrders.length);
+      setMonthlyOrders(monthlyCount);
+      setMonthlyRevenue(monthlyRev);
+
+      // Calculate yesterday's created orders for comparison
+      const yesterdayCreatedOrders = allOrders.filter(
+        (order) => {
+          const createdDate = new Date(order.created_at);
+          const yesterdayString = getDateString(yesterday);
+          const createdDateString = getDateString(createdDate);
+          return createdDateString === yesterdayString;
+        }
+      );
+
+      // Set orders comparison
+      const ordersComparisonResult = getComparisonText(
+        todayStats.created_today || 0,
+        yesterdayCreatedOrders.length || 0
+      );
+      setOrdersComparison(ordersComparisonResult);
+
+      // Set revenue comparison
+      const revenueComparisonResult = getComparisonText(
+        todayStats.total_revenue || 0,
+        yesterdayStats.total_revenue || 0,
+        true
+      );
+      setRevenueComparison(revenueComparisonResult);
+
+      // Set cancelled comparison
+      const cancelledComparisonResult = getComparisonText(
+        todayStats.cancelled_orders || 0,
+        yesterdayStats.cancelled_orders || 0
+      );
+      setCancelledComparison(cancelledComparisonResult);
+
+      // Debug logging to verify calculations
+      const todayUTC = new Date();
+      const todayLocal = new Date(todayUTC.getTime() - (todayUTC.getTimezoneOffset() * 60000));
+      
+      console.log('🎯 DASHBOARD METRICS VERIFICATION:', {
+        '📊 MAIN DASHBOARD CARDS': {
+          'Today\'s Orders (All placed today)': todayCreatedOrders.length,
+          'Today\'s Revenue (From delivered today)': `KSh ${todayStats.total_revenue.toLocaleString("en-KE")}`,
+          'Monthly Orders': monthlyCount,
+          'Monthly Revenue': `KSh ${monthlyRev.toLocaleString("en-KE")}`
+        },
+        
+        '📋 TODAY\'S SUMMARY SECTION': {
+          'Orders Completed (Delivered today)': todayCompletedOrders.length,
+          'Revenue Generated (From delivered today)': `KSh ${todayStats.total_revenue.toLocaleString("en-KE")}`,
+          'Cancelled Orders': todayStats.cancelled_orders
+        },
+        
+        '🔍 VERIFICATION DATA': {
+          todaysOrdersPlaced: todayCreatedOrders.length,
+          todaysOrdersDelivered: todayCompletedOrders.length,
+          todaysRevenue: todayStats.total_revenue,
+          recentDeliveredOrders: recentDeliveredOrders.length,
+          totalSystemOrders: allOrders.length,
+          totalDeliveredOrders: allOrders.filter(o => o.status === 'delivered').length,
+          'STATS OBJECT CONTENT': todayStats,
+          'STATE VALUES': {
+            'stats.created_today': stats?.created_today,
+            'stats.total_orders': stats?.total_orders,
+            'stats.total_revenue': stats?.total_revenue
+          }
+        },
+        
+        '📅 DATE VERIFICATION': {
+          todayFormatted: getDateString(todayUTC),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timezoneOffset: todayUTC.getTimezoneOffset()
+        },
+        
+        '📦 SAMPLE ORDERS FOR TODAY': {
+          ordersCreatedToday: todayCreatedOrders.slice(0, 2).map(o => ({
+            order_id: o.order_id,
+            status: o.status,
+            price: o.price,
+            created_date: getDateString(new Date(o.created_at)),
+            meal_name: o.meal_name
+          })),
+          ordersDeliveredToday: todayCompletedOrders.slice(0, 2).map(o => ({
+            order_id: o.order_id,
+            status: o.status,
+            price: o.price,
+            delivered_date: o.updated_at ? getDateString(new Date(o.updated_at)) : 'N/A',
+            meal_name: o.meal_name
+          }))
+        }
+      });
 
         const startOfWeek = new Date();
         startOfWeek.setDate(today.getDate() - today.getDay());
@@ -152,10 +421,25 @@ const Dashboard = () => {
       } finally {
         setLoading(false);
       }
+  }, []);
+
+  // Use real-time updates with 15-second polling (more frequent for responsiveness)
+  const { refresh } = useRealTimeUpdates(fetchDashboardData, [], 15000);
+
+  // Additional effect to refresh when page becomes visible (user switches tabs)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔄 Page became visible, refreshing dashboard...');
+        fetchDashboardData();
+      }
     };
 
-    fetchData();
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchDashboardData]);
 
   const getComparisonText = (
     todayValue,
@@ -182,21 +466,30 @@ const Dashboard = () => {
     };
   };
 
-  const ordersComparison = getComparisonText(
-    completedOrdersCount || 0,
-    yesterdayStats?.total_orders || 0
-  );
 
-  const revenueComparison = getComparisonText(
-    stats?.total_revenue || 0,
-    yesterdayStats?.total_revenue || 0,
-    true
-  );
 
-  const cancelledComparison = getComparisonText(
-    cancelledOrdersCount || 0,
-    yesterdayStats?.cancelled_orders || 0
-  );
+
+  // Debug UI values right before render
+  if (stats && !loading) {
+    console.log('🎨 UI RENDER VALUES:', {
+      'Today\'s Orders Card': {
+        value: stats?.created_today || 0,
+        subtitle: `${stats?.total_orders || 0} delivered today`
+      },
+      'Today\'s Revenue Card': {
+        value: `KSh ${stats?.total_revenue?.toLocaleString("en-KE") || 0}`,
+        subtitle: revenueComparison?.text || 'No comparison'
+      },
+      'Summary Orders Completed': {
+        value: stats?.total_orders || 0,
+        subtitle: "Meals delivered today"
+      },
+      'Summary Revenue Generated': {
+        value: `KSh ${stats?.total_revenue?.toLocaleString("en-KE") || 0}`,
+        subtitle: "From delivered orders today"
+      }
+    });
+  }
 
   if (loading) {
     return (
@@ -250,6 +543,7 @@ const Dashboard = () => {
                 <p className="text-gray-600 mt-1 text-sm sm:text-base">Overview of your catering business</p>
               </div>
             </div>
+            <div className="flex items-center space-x-4">
             <div className="hidden md:block">
               <div className="px-4 py-2 bg-gradient-to-r from-orange-100 to-green-100 rounded-full border border-orange-200/50">
                 <p className="text-sm font-medium text-gray-700">
@@ -261,6 +555,14 @@ const Dashboard = () => {
                   })}
                 </p>
               </div>
+              </div>
+              <button
+                onClick={refresh}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-500 text-white rounded-full shadow-lg hover:from-orange-600 hover:to-green-600 transition-all duration-300 transform hover:scale-105"
+              >
+                <ArrowPathIcon className="h-4 w-4 mr-2" />
+                Refresh
+              </button>
             </div>
           </div>
         </div>
@@ -268,9 +570,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <StatCard
             title="Today's Orders"
-            value={completedOrdersCount || 0}
-            change={ordersComparison.text}
-            isIncrease={ordersComparison.isIncrease}
+            value={stats?.created_today || 0}
+            change={`${stats?.total_orders || 0} delivered today`}
             icon={<ShoppingBagIcon className="h-7 w-7" />}
             gradient="from-orange-400 to-orange-600"
             delay="0"
@@ -370,13 +671,15 @@ const Dashboard = () => {
                 <SummaryItem
                   icon={<CheckCircleIcon className="h-5 w-5" />}
                   label="Orders Completed"
-                  value={completedOrdersCount || 0}
+                  value={stats?.total_orders || 0}
+                  subtitle="Meals delivered today"
                   gradient="from-green-400 to-green-600"
                 />
                 <SummaryItem
                   icon={<CurrencyDollarIcon className="h-5 w-5" />}
                   label="Revenue Generated"
                   value={`KSh ${stats?.total_revenue?.toLocaleString("en-KE") || 0}`}
+                  subtitle="From delivered orders today"
                   gradient="from-green-400 to-green-600"
                 />
                 <SummaryItem
@@ -425,7 +728,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }

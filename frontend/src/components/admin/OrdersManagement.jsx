@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
+import { useRealTimeUpdates } from "../../utils/useRealTimeUpdates";
 import {
   ShoppingBagIcon,
   ClockIcon,
@@ -8,16 +9,16 @@ import {
   XCircleIcon,
   CurrencyDollarIcon,
   CogIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
 const OrdersManagement = () => {
-  useAuth();
+  const { triggerRefresh } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
-  useEffect(() => {
-    const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
       setLoading(true);
       try {
         const response = await api.get("/admin/orders");
@@ -27,47 +28,119 @@ const OrdersManagement = () => {
       } finally {
         setLoading(false);
       }
-    };
+  }, []);
 
-    fetchOrders();
-  }, [activeTab]);
+  // Use real-time updates with 15-second polling for orders
+  const { refresh } = useRealTimeUpdates(fetchOrders, [activeTab], 15000);
+
+  // Debug logging for Orders Management
+  useEffect(() => {
+    if (orders.length > 0) {
+      const today = new Date();
+      const todayString = getDateString(today);
+      
+      const todayCreated = orders.filter((o) => {
+        const createdDate = new Date(o.created_at);
+        return getDateString(createdDate) === todayString;
+      });
+      
+      const todayDelivered = orders.filter((o) => {
+        if (o.status !== "delivered") return false;
+        const deliveredDate = o.updated_at ? new Date(o.updated_at) : new Date(o.created_at);
+        return getDateString(deliveredDate) === todayString;
+      });
+      
+      console.log('📦 ORDERS MANAGEMENT DEBUG:', {
+        totalOrders: orders.length,
+        todayString: todayString,
+        todayCreated: todayCreated.length,
+        todayDelivered: todayDelivered.length,
+        sampleOrders: orders.slice(0, 3).map(o => ({
+          order_id: o.order_id,
+          status: o.status,
+          created_at: o.created_at,
+          updated_at: o.updated_at,
+          created_date: getDateString(new Date(o.created_at)),
+          updated_date: o.updated_at ? getDateString(new Date(o.updated_at)) : 'N/A'
+        }))
+      });
+    }
+  }, [orders]);
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await api.put(`/admin/orders/${orderId}/status`, { status: newStatus });
-      setOrders(
-        orders.map((order) =>
-          order.order_id === orderId ? { ...order, status: newStatus } : order
+      
+      // Optimistic update
+      setOrders(prevOrders =>
+        prevOrders.map((order) =>
+          order.order_id === orderId ? { ...order, status: newStatus, updated_at: new Date().toISOString() } : order
         )
       );
+      
+      // Trigger global refresh for all components (Dashboard, etc.)
+      triggerRefresh();
+      
+      // Also trigger local refresh after a short delay
+      setTimeout(() => {
+        refresh();
+      }, 500);
+      
+      console.log(`✅ Order ${orderId} status updated to: ${newStatus}`);
     } catch (error) {
       console.error("Error updating order status:", error);
+      // Revert optimistic update on error
+      refresh();
     }
+  };
+
+  // Helper function for reliable date comparison
+  const getDateString = (date) => {
+    const d = new Date(date);
+    return d.getFullYear() + '-' + 
+           String(d.getMonth() + 1).padStart(2, '0') + '-' + 
+           String(d.getDate()).padStart(2, '0');
   };
 
   const calculateTodaysOrders = () => {
     const today = new Date();
-    return orders.filter(
-      (o) => new Date(o.created_at).toDateString() === today.toDateString()
-    ).length;
+    const todayString = getDateString(today);
+    
+    return orders.filter((o) => {
+      const createdDate = new Date(o.created_at);
+      const createdDateString = getDateString(createdDate);
+      return createdDateString === todayString;
+    }).length;
   };
 
   const calculateTodaysCompletedOrders = () => {
     const today = new Date();
-    return orders.filter(
-      (o) =>
-        new Date(o.created_at).toDateString() === today.toDateString() &&
-        o.status === "delivered"
-    ).length;
+    const todayString = getDateString(today);
+    
+    return orders.filter((o) => {
+      if (o.status !== "delivered") return false;
+      
+      // Check if delivered today (using updated_at if available)
+      const deliveredDate = o.updated_at ? new Date(o.updated_at) : new Date(o.created_at);
+      const deliveredDateString = getDateString(deliveredDate);
+      
+      return deliveredDateString === todayString;
+    }).length;
   };
 
   const calculateTodaysCancelledOrders = () => {
     const today = new Date();
-    return orders.filter(
-      (o) =>
-        new Date(o.created_at).toDateString() === today.toDateString() &&
-        o.status === "cancelled"
-    ).length;
+    const todayString = getDateString(today);
+    
+    return orders.filter((o) => {
+      if (o.status !== "cancelled") return false;
+      
+      // Check if cancelled today (using updated_at if available)
+      const cancelledDate = o.updated_at ? new Date(o.updated_at) : new Date(o.created_at);
+      const cancelledDateString = getDateString(cancelledDate);
+      
+      return cancelledDateString === todayString;
+    }).length;
   };
 
   const getFilteredOrders = () => {
@@ -116,12 +189,29 @@ const OrdersManagement = () => {
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-50 via-green-50 to-blue-50">
       <div className="relative z-10 space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in">
         <div className="backdrop-blur-lg bg-white/70 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8">
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+              <div className="relative">
+                <ShoppingBagIcon className="h-8 w-8 sm:h-10 sm:w-10 text-orange-500 animate-float" />
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-green-500 opacity-20 rounded-lg blur-sm"></div>
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
             Orders Management
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
             Efficiently manage all customer orders, update statuses, and track revenue.
           </p>
+              </div>
+            </div>
+            <button
+              onClick={refresh}
+              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-500 text-white rounded-full shadow-lg hover:from-orange-600 hover:to-green-600 transition-all duration-300 transform hover:scale-105"
+            >
+              <ArrowPathIcon className="h-4 w-4 mr-2" />
+              Refresh
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

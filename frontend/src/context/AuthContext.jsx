@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react'
+import { createContext, useState, useEffect, useContext, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import api from '../services/api'
@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('token'))
   const [loading, setLoading] = useState(true)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -54,13 +55,20 @@ export const AuthProvider = ({ children }) => {
     navigate('/login')
   }
 
+  // Real-time update trigger function
+  const triggerRefresh = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1)
+  }, [])
+
   const value = {
     user,
     token,
     login,
     register,
     logout,
-    loading
+    loading,
+    refreshTrigger,
+    triggerRefresh
   }
 
   return (

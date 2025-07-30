@@ -1,37 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext'; // Assuming this path is correct
-import api from '../services/api'; // Assuming this path is correct
-import OrderCard from '../components/customer/OrderCard'; // Assuming this component exists and is styled appropriately
-import { ChevronRightIcon } from '@heroicons/react/24/outline'; // Importing for the "Browse Menu" button
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+import { useRealTimeUpdates } from '../utils/useRealTimeUpdates';
+import OrderCard from '../components/customer/OrderCard';
+import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 const Orders = () => {
-  useAuth(); // Ensure auth context is used
+  useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // State for error handling
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true); // Set loading true before fetch
-        setError(null); // Clear previous errors
-        const response = await api.get('/orders/history');
-        setOrders(response.data.data);
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('Failed to load orders. Please check your connection or try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get('/orders/history');
+      setOrders(response.data.data);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('Failed to load orders. Please check your connection or try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  // Use real-time updates with 25-second polling
+  const { refresh } = useRealTimeUpdates(fetchOrders, [], 25000);
+
   const handleCancelOrder = async (orderId) => {
-    // Implement a confirmation dialog here instead of alert/confirm
-    // For this example, we'll proceed directly but in a real app, a modal would be used.
-    if (!window.confirm("Are you sure you want to cancel this order?")) { // Use a custom modal in production
+    if (!window.confirm("Are you sure you want to cancel this order?")) {
       return;
     }
 
@@ -76,7 +74,7 @@ const Orders = () => {
         <p className="text-2xl font-bold mb-2">{error}</p>
         <p className="text-lg text-gray-600">It looks like we ran into a problem.</p>
         <button 
-          onClick={() => window.location.reload()} // Simple refresh, consider more sophisticated retry logic in production
+          onClick={() => window.location.reload()}
           className="mt-6 inline-flex items-center px-8 py-4 border border-transparent text-lg font-semibold rounded-full shadow-lg text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-red-300 transition-all duration-300 transform hover:scale-105"
         >
           Try Again
@@ -88,9 +86,20 @@ const Orders = () => {
   return (
     <div className="space-y-8 font-inter animate-fade-in-up">
       <div className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-10">
-        <h1 className="text-5xl font-extrabold bg-gradient-to-r from-orange-600 to-green-700 bg-clip-text text-transparent mb-10 text-center md:text-left">
-          Your Culinary Journey
-        </h1>
+        <div className="flex items-center justify-between mb-10">
+          <h1 className="text-5xl font-extrabold bg-gradient-to-r from-orange-600 to-green-700 bg-clip-text text-transparent text-center md:text-left">
+            Your Culinary Journey
+          </h1>
+          <button
+            onClick={refresh}
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-500 text-white rounded-full shadow-lg hover:from-orange-600 hover:to-green-600 transition-all duration-300 transform hover:scale-105"
+          >
+            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
 
         {orders.length === 0 ? (
           <div className="text-center py-20 flex flex-col items-center justify-center animate-fade-in-up">

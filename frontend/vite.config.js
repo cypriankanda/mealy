@@ -5,13 +5,26 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: '/',
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@headlessui/react', '@heroicons/react']
+        }
+      }
+    }
+  },
   server: {
     proxy: {
       '/api': {
         target: 'https://mealy-production.up.railway.app',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/api'),
-        secure: false, // optional, if you're having SSL issues
+        secure: true,
       }
     }
   }

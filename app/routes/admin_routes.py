@@ -131,7 +131,8 @@ def get_all_orders():
             'price': order.price,
             'menu_date': order.menu_date.isoformat(),
             'status': order.status,
-            'created_at': order.created_at.isoformat()
+            'created_at': order.created_at.isoformat(),
+            'updated_at': order.updated_at.isoformat()
         })
     
     return jsonify({

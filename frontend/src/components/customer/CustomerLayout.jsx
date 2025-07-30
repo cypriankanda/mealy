@@ -1,25 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // Assuming this path is correct
+import { useAuth } from '../../context/AuthContext';
+import { useRealTimeUpdates } from '../../utils/useRealTimeUpdates';
+import api from '../../services/api';
 import {
   HomeIcon,
   ShoppingBagIcon,
   ClockIcon,
   UserIcon,
   ArrowRightOnRectangleIcon,
-  Bars3Icon, // For hamburger menu
-  XMarkIcon // For close button in mobile menu
+  Bars3Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 const CustomerLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showContent, setShowContent] = useState(false); // For staggered animation
+  const [showContent, setShowContent] = useState(false);
+  const [orderStats, setOrderStats] = useState({
+    totalOrders: 0,
+    completedOrders: 0,
+    pendingOrders: 0
+  });
 
   // Simulate user data for demonstration if not available
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Customer';
   const userEmail = user?.email || 'customer@example.com';
+
+  const fetchOrderStats = useCallback(async () => {
+    try {
+      const response = await api.get('/orders/history');
+      const orders = response.data.data;
+      
+      const totalOrders = orders.length;
+      const completedOrders = orders.filter(order => order.status === 'delivered').length;
+      const pendingOrders = orders.filter(order => 
+        ['confirmed', 'preparing', 'ready'].includes(order.status)
+      ).length;
+      
+      setOrderStats({
+        totalOrders,
+        completedOrders,
+        pendingOrders
+      });
+    } catch (error) {
+      console.error('Error fetching order stats:', error);
+    }
+  }, []);
+
+  // Use real-time updates with 30-second polling
+  useRealTimeUpdates(fetchOrderStats, [], 30000);
 
   useEffect(() => {
     // Trigger content animation after component mounts
@@ -44,7 +75,7 @@ const CustomerLayout = () => {
       }`,
       icon: `mr-4 flex-shrink-0 h-7 w-7 transition-all duration-300 ease-in-out ${
         isActive
-          ? 'text-white' // Active icons are white on gradient background
+          ? 'text-white'
           : `bg-gradient-to-br ${navItems.find(i => i.path === itemPath)?.iconGradient} bg-clip-text text-transparent group-hover:text-orange-600`
       }`,
       text: `transition-all duration-300 ease-in-out ${
@@ -137,7 +168,7 @@ const CustomerLayout = () => {
             <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsMobileMenuOpen(false)}>
               <div
                 className="fixed inset-y-0 right-0 w-64 bg-white/95 backdrop-blur-lg shadow-xl flex flex-col py-6 transform transition-transform duration-300 ease-in-out"
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between px-6 mb-8">
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">Menu</h2>
@@ -176,7 +207,6 @@ const CustomerLayout = () => {
               </div>
             </div>
           )}
-
 
           {/* Content area */}
           <main className="flex-1 overflow-y-auto focus:outline-none p-6 md:p-8">
@@ -233,16 +263,16 @@ const CustomerLayout = () => {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="flex flex-col items-center p-4 bg-orange-50 rounded-xl shadow-inner transform hover:scale-105 transition-transform duration-200">
-                      <span className="text-5xl font-extrabold text-orange-600">12</span>
+                      <span className="text-5xl font-extrabold text-orange-600">{orderStats.totalOrders}</span>
                       <p className="text-lg text-gray-700 mt-2">Total Orders</p>
                     </div>
                     <div className="flex flex-col items-center p-4 bg-green-50 rounded-xl shadow-inner transform hover:scale-105 transition-transform duration-200">
-                      <span className="text-5xl font-extrabold text-green-600">8</span>
-                      <p className="text-lg text-gray-700 mt-2">Favorite Meals</p>
+                      <span className="text-5xl font-extrabold text-green-600">{orderStats.completedOrders}</span>
+                      <p className="text-lg text-gray-700 mt-2">Completed Orders</p>
                     </div>
                     <div className="flex flex-col items-center p-4 bg-blue-50 rounded-xl shadow-inner transform hover:scale-105 transition-transform duration-200">
-                      <span className="text-5xl font-extrabold text-blue-600">5</span>
-                      <p className="text-lg text-gray-700 mt-2">Reviews Given</p>
+                      <span className="text-5xl font-extrabold text-blue-600">{orderStats.pendingOrders}</span>
+                      <p className="text-lg text-gray-700 mt-2">Pending Orders</p>
                     </div>
                     <div className="flex flex-col items-center p-4 bg-purple-50 rounded-xl shadow-inner transform hover:scale-105 transition-transform duration-200">
                       <span className="text-5xl font-extrabold text-purple-600">250</span>
@@ -252,7 +282,7 @@ const CustomerLayout = () => {
                 </div>
               </div>
             )}
-            <Outlet /> {/* Renders nested routes */}
+            <Outlet />
           </main>
         </div>
       </div>
