@@ -200,70 +200,114 @@ class Order(db.Model):
     @classmethod
     def get_dashboard_stats(cls, caterer_id):
         """Get comprehensive dashboard statistics"""
-        today = date.today()
-        yesterday = today - timedelta(days=1)
-        first_day_of_month = today.replace(day=1)
-        
-        # Start of week (Monday)
-        start_of_week = today - timedelta(days=today.weekday())
-        
-        # Import Meal locally to avoid circular import
-        from app.models.meal import Meal
-        
-        # Today's stats
-        today_stats = cls.query.join(cls.meal).filter(
-            Meal.caterer_id == caterer_id,
-            cls.menu_date == today
-        ).with_entities(
-            func.count(cls.id).label('total_orders'),
-            func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue'),
-            func.count().filter(cls.status == 'cancelled').label('cancelled_orders')
-        ).first()
-        
-        # Yesterday's stats
-        yesterday_stats = cls.query.join(cls.meal).filter(
-            Meal.caterer_id == caterer_id,
-            cls.menu_date == yesterday
-        ).with_entities(
-            func.count(cls.id).label('total_orders'),
-            func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue')
-        ).first()
-        
-        # Month stats
-        month_stats = cls.query.join(cls.meal).filter(
-            Meal.caterer_id == caterer_id,
-            cls.menu_date >= first_day_of_month,
-            cls.menu_date <= today
-        ).with_entities(
-            func.count(cls.id).label('total_orders'),
-            func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue')
-        ).first()
-        
-        # Most popular meal this week
-        popular_meal = db.session.query(
-            Meal.name,
-            func.count(cls.id).label('order_count'),
-            func.avg(cls.price).label('avg_price')
-        ).join(cls.meal).filter(
-            Meal.caterer_id == caterer_id,
-            cls.menu_date >= start_of_week,
-            cls.status != 'cancelled'
-        ).group_by(Meal.id).order_by(func.count(cls.id).desc()).first()
-        
-        return {
-            'today_orders': today_stats[0] or 0,
-            'today_revenue': today_stats[1] or 0,
-            'today_cancelled': today_stats[2] or 0,
-            'yesterday_orders': yesterday_stats[0] or 0,
-            'yesterday_revenue': yesterday_stats[1] or 0,
-            'month_orders': month_stats[0] or 0,
-            'month_revenue': month_stats[1] or 0,
-            'popular_meal': {
-                'name': popular_meal[0],
-                'order_count': popular_meal[1],
-                'avg_price': round(popular_meal[2] or 0)
-            } if popular_meal else None
-        }
+        try:
+            today = date.today()
+            yesterday = today - timedelta(days=1)
+            first_day_of_month = today.replace(day=1)
+            
+            # Start of week (Monday)
+            start_of_week = today - timedelta(days=today.weekday())
+            
+            # Import Meal locally to avoid circular import
+            from app.models.meal import Meal
+            
+            print(f"Dashboard stats for caterer_id: {caterer_id}")
+            
+            # Today's stats
+            today_stats = cls.query.join(cls.meal).filter(
+                Meal.caterer_id == caterer_id,
+                cls.menu_date == today
+            ).with_entities(
+                func.count(cls.id).label('total_orders'),
+                func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue'),
+                func.count().filter(cls.status == 'cancelled').label('cancelled_orders')
+            ).first()
+            
+            print(f"Today stats: {today_stats}")
+            
+            # Yesterday's stats
+            yesterday_stats = cls.query.join(cls.meal).filter(
+                Meal.caterer_id == caterer_id,
+                cls.menu_date == yesterday
+            ).with_entities(
+                func.count(cls.id).label('total_orders'),
+                func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue')
+            ).first()
+            
+            print(f"Yesterday stats: {yesterday_stats}")
+            
+            # Month stats
+            month_stats = cls.query.join(cls.meal).filter(
+                Meal.caterer_id == caterer_id,
+                cls.menu_date >= first_day_of_month,
+                cls.menu_date <= today
+            ).with_entities(
+                func.count(cls.id).label('total_orders'),
+                func.sum(cls.price).filter(cls.status != 'cancelled').label('total_revenue')
+            ).first()
+            
+            print(f"Month stats: {month_stats}")
+            
+            # Most popular meal this week
+            popular_meal = db.session.query(
+                Meal.name,
+                func.count(cls.id).label('order_count'),
+                func.avg(cls.price).label('avg_price')
+            ).join(cls.meal).filter(
+                Meal.caterer_id == caterer_id,
+                cls.menu_date >= start_of_week,
+                cls.status != 'cancelled'
+            ).group_by(Meal.id).order_by(func.count(cls.id).desc()).first()
+            
+            print(f"Popular meal: {popular_meal}")
+            
+            # Safely extract stats with None checks
+            today_orders = today_stats[0] if today_stats else 0
+            today_revenue = today_stats[1] if today_stats else 0
+            today_cancelled = today_stats[2] if today_stats else 0
+            
+            yesterday_orders = yesterday_stats[0] if yesterday_stats else 0
+            yesterday_revenue = yesterday_stats[1] if yesterday_stats else 0
+            
+            month_orders = month_stats[0] if month_stats else 0
+            month_revenue = month_stats[1] if month_stats else 0
+            
+            # Safely extract popular meal
+            popular_meal_data = None
+            if popular_meal:
+                popular_meal_data = {
+                    'name': popular_meal[0],
+                    'order_count': popular_meal[1],
+                    'avg_price': round(popular_meal[2] or 0)
+                }
+            
+            result = {
+                'today_orders': today_orders,
+                'today_revenue': today_revenue,
+                'today_cancelled': today_cancelled,
+                'yesterday_orders': yesterday_orders,
+                'yesterday_revenue': yesterday_revenue,
+                'month_orders': month_orders,
+                'month_revenue': month_revenue,
+                'popular_meal': popular_meal_data
+            }
+            
+            print(f"Dashboard result: {result}")
+            return result
+            
+        except Exception as e:
+            print(f"Dashboard stats error: {str(e)}")
+            # Return safe defaults on error
+            return {
+                'today_orders': 0,
+                'today_revenue': 0,
+                'today_cancelled': 0,
+                'yesterday_orders': 0,
+                'yesterday_revenue': 0,
+                'month_orders': 0,
+                'month_revenue': 0,
+                'popular_meal': None
+            }
     
     def __repr__(self):
         return f'<Order {self.id} - {self.status} - KES {self.price_kes}>'
